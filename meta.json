@@ -57,10 +57,32 @@
   ],
   "high_cut": 44,
   "med_cut": 32.31,
-  "holdout_accuracy": {
+  "n_rows": 481,
+  "single_split_seed42": {
     "rule": 1.0,
     "mlp_full": 0.8762886597938144,
     "mlp_no_sum": 0.7216494845360825
   },
-  "n_rows": 481
+  "holdout_accuracy": {
+    "rule": 1.0,
+    "mlp_full": 0.938,
+    "mlp_no_sum": 0.65
+  },
+  "holdout_accuracy_sd": {
+    "rule": 0.0,
+    "mlp_full": 0.029,
+    "mlp_no_sum": 0.038
+  },
+  "holdout_accuracy_range": {
+    "mlp_full": [
+      0.866,
+      0.979
+    ],
+    "mlp_no_sum": [
+      0.577,
+      0.763
+    ]
+  },
+  "repeats": 25,
+  "note": "holdout_accuracy = mean over 25 random stratified 80/20 splits (3 decimals, from the Colab run). single_split_seed42 = one split only."
 }
