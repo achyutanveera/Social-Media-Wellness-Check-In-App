@@ -66,6 +66,7 @@
   .flag-items { font-size: 11.5px; color: var(--muted); margin: 3px 0 0 2px; line-height: 1.5; }
   .badge-jump { background: #FBEAEA; color: #A32D2D; }
   .jump { color: #A32D2D; font-weight: 700; }
+  .drop { color: #2E7D32; font-weight: 700; }
   .up { color: var(--amber); font-weight: 700; }
   .down { color: var(--green); font-weight: 700; }
   .back-link { color: var(--purple); font-size: 14px; cursor: pointer; margin-bottom: 14px; display: inline-block; }
@@ -234,8 +235,8 @@ function computeTrends(entriesAsc) {
 
 // Flags shown in the student list: the overall score and any section that is moving,
 // with the individual answers inside a moving section that are also moving.
-// A sudden jump is a big rise between two check-ins in a row: overall score +8 or more,
-// or a section total (3 answers) +4 or more.
+// A sudden jump (rise) or drop (fall) is a big change between two check-ins in a row:
+// overall score 8 or more, or a section total (3 answers) 4 or more. Deltas are signed.
 const OVERALL_JUMP = 8, SECTION_JUMP = 4;
 function computeJumps(entriesAsc) {
   const out = [];
@@ -243,16 +244,19 @@ function computeJumps(entriesAsc) {
     const a = entriesAsc[i - 1].responses || {}, b = entriesAsc[i].responses || {};
     const o = impactSum(b) - impactSum(a);
     const secs = SECTIONS.map(sec => ({ name: sec.name, delta: sectionScore(b, sec) - sectionScore(a, sec) }))
-      .filter(x => x.delta >= SECTION_JUMP);
-    if (o >= OVERALL_JUMP || secs.length) out.push({ at: i + 1, overall: o >= OVERALL_JUMP ? o : null, sections: secs });
+      .filter(x => Math.abs(x.delta) >= SECTION_JUMP);
+    const big = Math.abs(o) >= OVERALL_JUMP;
+    if (big || secs.length) out.push({ at: i + 1, overall: big ? o : null, sections: secs });
   }
   return out;
 }
 function jumpNote(jumps, pick, n) {
   const hits = jumps.map(j => ({ at: j.at, d: pick(j) })).filter(h => h.d);
   if (!hits.length) return "";
-  return `<br><strong>Sudden increase:</strong> ` +
-    hits.map(h => `<span class="jump">+${h.d}</span> at check-in ${h.at}${h.at === n ? " (latest)" : ""}`).join(" · ");
+  return `<br><strong>Sudden change:</strong> ` +
+    hits.map(h => h.d > 0
+      ? `<span class="jump">+${h.d} jump</span> at check-in ${h.at}${h.at === n ? " (latest)" : ""}`
+      : `<span class="drop">\u2212${Math.abs(h.d)} drop</span> at check-in ${h.at}${h.at === n ? " (latest)" : ""}`).join(" · ");
 }
 
 function computeFlags(entriesAsc) {
@@ -261,8 +265,9 @@ function computeFlags(entriesAsc) {
   // Sudden jumps in the most recent check-in come first, since they need attention soonest.
   const latest = computeJumps(entriesAsc).find(j => j.at === entriesAsc.length);
   if (latest) {
-    if (latest.overall) flags.push({ label: "Sudden jump: Overall score +" + latest.overall, dir: "jump", items: [] });
-    latest.sections.forEach(x => flags.push({ label: "Sudden jump: " + x.name + " +" + x.delta, dir: "jump", items: [] }));
+    const mk = (name, d) => ({ label: (d > 0 ? "Sudden jump: " : "Sudden drop: ") + name + (d > 0 ? " +" : " \u2212") + Math.abs(d), dir: d > 0 ? "jump" : "drop", items: [] });
+    if (latest.overall) flags.push(mk("Overall score", latest.overall));
+    latest.sections.forEach(x => flags.push(mk(x.name, x.delta)));
   }
   if (t.overall) flags.push({ label: "Overall score", dir: t.overall, items: [] });
   t.sections.forEach(x => { if (x.dir) flags.push({ label: x.sec.name, dir: x.dir, items: x.items }); });
@@ -272,7 +277,7 @@ function flagHtml(f) {
   const sub = f.items.length
     ? `<div class="flag-items">${f.items.map(i => `${esc(i.label)} <span class="${i.dir}">${arrow(i.dir)}</span>`).join(" · ")}</div>`
     : "";
-  return `<div class="flag-line"><span class="badge ${f.dir === "jump" ? "badge-jump" : f.dir === "down" ? "badge-improve" : "badge-flag"}">${esc(f.label)}${f.dir === "jump" ? "" : " " + arrow(f.dir)}</span>${sub}</div>`;
+  return `<div class="flag-line"><span class="badge ${f.dir === "jump" ? "badge-jump" : (f.dir === "down" || f.dir === "drop") ? "badge-improve" : "badge-flag"}">${esc(f.label)}${(f.dir === "jump" || f.dir === "drop") ? "" : " " + arrow(f.dir)}</span>${sub}</div>`;
 }
 
 // ---- Data loading ----
@@ -357,7 +362,7 @@ function startDemo() {
   }));
   const E = [[2,2,2, 3,2,3, 2,2,2, 2,2,2], [2,3,2, 3,3,3, 2,2,3, 2,3,2], [2,2,2, 3,2,3, 2,2,2, 2,2,3], [4,4,3, 4,4,4, 3,3,4, 4,3,4]];
   const F = [[3,3,3, 3,3,3, 3,3,3, 2,2,2], [3,3,3, 3,3,3, 3,3,3, 2,3,2], [3,3,3, 3,3,3, 3,3,3, 2,2,2], [3,3,3, 3,3,3, 3,3,3, 5,3,3]];
-  const G = [[2,2,2, 2,2,3, 2,2,2, 2,2,2], [2,2,2, 3,2,3, 2,2,2, 2,2,2], [4,4,4, 4,3,4, 3,3,4, 3,3,3], [4,3,4, 4,3,4, 3,3,3, 3,3,3], [3,3,3, 3,3,3, 3,2,3, 2,3,3]];
+  const G = [[2,2,2, 2,2,3, 2,2,2, 2,2,2], [2,2,2, 3,2,3, 2,2,2, 2,2,2], [4,4,4, 4,3,4, 3,3,4, 3,3,3], [4,3,4, 4,3,4, 3,3,3, 3,3,3], [2,2,2, 2,3,2, 2,2,2, 2,2,3]];
   const H = [[2,3,3, 3,3,3, 3,3,3, 5,3,4], [2,3,3, 3,3,3, 3,3,3, 4,3,3], [3,3,3, 3,3,3, 3,3,3, 4,3,3], [4,3,3, 3,3,3, 3,3,3, 3,3,2], [5,3,3, 3,3,3, 3,3,3, 2,3,2]];
   const I = [[2,2,2, 2,2,3, 2,2,2, 2,2,2], [2,3,2, 3,3,3, 3,3,3, 2,2,3], [3,3,3, 3,3,3, 3,3,3, 3,3,3], [4,4,4, 4,3,3, 3,3,3, 5,4,5]];
   const J = [[2,2,2, 2,2,2, 4,3,4, 2,2,2], [2,2,2, 2,3,2, 3,3,3, 2,2,2], [2,2,2, 3,3,2, 2,2,2, 2,2,2]];
@@ -396,7 +401,7 @@ function renderStudentList(students) {
       </table>
     </div>
     <div class="note-box">
-      A trend flag means the overall score, or a whole section (its 3 answers added together), moved in one direction across the last three consecutive check-ins, not a single high or low score. Orange ↑ means it rose; green ↓ means it fell (improving). Under a flagged section, the individual answers that also moved are listed. A red "Sudden jump" flag means the overall score rose by 8 or more, or a section rose by 4 or more, between the last two check-ins.
+      A trend flag means the overall score, or a whole section (its 3 answers added together), moved in one direction across the last three consecutive check-ins, not a single high or low score. Orange ↑ means it rose; green ↓ means it fell (improving). Under a flagged section, the individual answers that also moved are listed. A red "Sudden jump" flag means the overall score rose by 8 or more, or a section rose by 4 or more, between the last two check-ins. A green "Sudden drop" flag means it fell by that much, which usually means things improved (it could also mean the student answered differently).
       "Latest level" is a screening summary of the most recent check-in (12 answers scored 1–5, total 12–60;
       lower 32 or below, medium 33–43, higher 44+). It supports a counselor's judgment and is not a diagnosis.
       Click a student to see the full trend.
@@ -504,12 +509,17 @@ function renderCharts(entries) {
   const jumps = computeJumps(entries);
   const n = entries.length;
   const needMore = "Trends need 3 or more check-ins.";
-  // Points where a sudden jump landed are drawn larger and red.
-  const jumpPoints = pick => ({
-    pointBackgroundColor: entries.map((e, i) => jumps.some(j => j.at === i + 1 && pick(j)) ? "#A32D2D" : "#492F92"),
-    pointBorderColor: entries.map((e, i) => jumps.some(j => j.at === i + 1 && pick(j)) ? "#A32D2D" : "#492F92"),
-    pointRadius: entries.map((e, i) => jumps.some(j => j.at === i + 1 && pick(j)) ? 6 : 3)
-  });
+  // Points where a sudden change landed are drawn larger: red for a jump, green for a drop.
+  // pick(j) returns the signed change for that check-in, or nothing.
+  const deltaAt = (i, pick) => { const j = jumps.find(x => x.at === i + 1); return j ? pick(j) : 0; };
+  const jumpPoints = pick => {
+    const colorAt = i => { const d = deltaAt(i, pick); return d > 0 ? "#A32D2D" : d < 0 ? "#2E7D32" : "#492F92"; };
+    return {
+      pointBackgroundColor: entries.map((e, i) => colorAt(i)),
+      pointBorderColor: entries.map((e, i) => colorAt(i)),
+      pointRadius: entries.map((e, i) => deltaAt(i, pick) ? 6 : 3)
+    };
+  };
   try {
     lineChart(grid, "Overall score (12–60)", labels, [
       { ...main, ...jumpPoints(j => j.overall), data: entries.map(e => impactSum(e.responses)) },
@@ -532,7 +542,7 @@ function renderCharts(entries) {
       }
       note += jumpNote(jumps, j => (j.sections.find(z => z.name === x.sec.name) || {}).delta, n);
       lineChart(grid, x.sec.name + " (3–15)", labels,
-        [{ ...main, ...jumpPoints(j => j.sections.some(z => z.name === x.sec.name)), data: entries.map(e => sectionScore(e.responses, x.sec)) },
+        [{ ...main, ...jumpPoints(j => (j.sections.find(z => z.name === x.sec.name) || {}).delta), data: entries.map(e => sectionScore(e.responses, x.sec)) },
          { ...guide("#2E8B3D"), data: entries.map(() => SEC_MED_CUT) },
          { ...guide("#C0392B"), data: entries.map(() => SEC_HIGH_CUT) }], 3, 15, 3, { noteHtml: note, lo: SEC_MED_CUT, hi: SEC_HIGH_CUT });
     } catch (err) { console.error("Chart failed for " + x.sec.name, err); }
