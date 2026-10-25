@@ -279,10 +279,36 @@
     <button onclick="goToStep(2)">Continue</button>
     <div class="note-box">
       Your responses are visible to the counseling team running this check-in. This check-in is optional,
-      is for ages 13 and up, and you can stop at any time.
+      is for ages 10 and up (students under 13 need a parent or guardian to agree first), and you can stop at any time.
       This is not an emergency service. If you need help right now, call or text 988 (Suicide &amp; Crisis Lifeline)
       or tell a trusted adult.
     </div>
+  </div>
+
+  <div id="step-consent" class="step" style="display:none;">
+    <div class="card">
+      <div class="domain-label">Parent or guardian</div>
+      <p style="font-size:14.5px; line-height:1.5; margin:0 0 12px;">
+        Hi! Since you are under 13, a parent or guardian needs to say yes before you start. Please hand this page to them.
+      </p>
+      <p style="font-size:14px; line-height:1.5; margin:0 0 12px;">
+        <strong>For the parent or guardian:</strong> Mind the Gap is a short, optional wellness check-in. Your child's answers, name and email
+        are seen only by the school counseling team. It is not a diagnosis and not an emergency service. You can ask the counseling team to
+        delete your child's responses at any time.
+      </p>
+      <label class="field-label">Parent or guardian full name</label>
+      <input type="text" id="parent-name" maxlength="80" autocomplete="off" placeholder="First and last name"
+             oninput="this.value = this.value.replace(/[^\p{L} '\u2019.\-]/gu, '')">
+      <label class="field-label">Parent or guardian email</label>
+      <input type="email" id="parent-email" maxlength="120" autocomplete="off" inputmode="email" placeholder="parent@example.com"
+             oninput="this.value = this.value.replace(/\s/g, '')">
+      <label style="display:flex; gap:10px; align-items:flex-start; font-size:14px; line-height:1.5; margin-top:14px;">
+        <input type="checkbox" id="parent-ok" style="margin-top:4px;">
+        <span>I am this student's parent or legal guardian. I agree to let them take this optional check-in, and I understand the counseling team will see their answers.</span>
+      </label>
+      <div id="consent-error" class="error-text" style="display:none; margin:10px 0 0;"></div>
+    </div>
+    <div class="btn-row"><button class="secondary" onclick="goToStep(1)">Back</button><button onclick="submitConsent()">Agree and continue</button></div>
   </div>
 
   <div id="step-2" class="step" style="display:none;"></div>
@@ -407,6 +433,7 @@ const questions = [
 ];
 
 let studentInfo = {};
+let parentInfo = null;
 let responses = {};
 
 function schoolSignIn() {
@@ -485,9 +512,9 @@ function goToStep(step) {
     // Age gate first, so a user under 13 is stopped before anything else is checked.
     const ageErr = document.getElementById("err-age");
     const ageNum = parseInt(responses["age"], 10);
-    if (!isNaN(ageNum) && ageNum < 13) { blockUnderAge(); return; }
+    if (!isNaN(ageNum) && ageNum < MIN_AGE) { blockUnderAge(); return; }
     if (!isNaN(ageNum) && ageNum > 129) {
-      ageErr.textContent = "Please enter an age between 13 and 129.";
+      ageErr.textContent = "Please enter an age between 10 and 129.";
       ageErr.style.display = "block";
       ageErr.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
@@ -537,10 +564,13 @@ function goToStep(step) {
     responses["age"] = String(ageNum); // "016" -> "16"
     errBox.style.display = "none";
     studentInfo = { name, email };
+    if (ageNum < 13 && !parentInfo) { showConsent(); return; }
+    if (ageNum >= 13) parentInfo = null;
     renderQuestionnaire();
   }
   document.getElementById("step-1").style.display = step === 1 ? "block" : "none";
   document.getElementById("step-2").style.display = step === 2 ? "block" : "none";
+  document.getElementById("step-consent").style.display = "none";
   document.getElementById("step-3").style.display = step === 3 ? "block" : "none";
   document.getElementById("prog-1").classList.toggle("active", step >= 1);
   document.getElementById("prog-2").classList.toggle("active", step >= 2);
@@ -580,6 +610,31 @@ function renderAbout() {
     questions.filter(q => q.domain === "About you").map(questionHtml).join("");
 }
 
+const MIN_AGE = 10;
+async function showConsent() {
+  document.getElementById("step-1").style.display = "none";
+  document.getElementById("step-consent").style.display = "block";
+  document.getElementById("consent-error").style.display = "none";
+  window.scrollTo(0, 0);
+}
+async function submitConsent() {
+  const err = document.getElementById("consent-error");
+  const fail = (m) => { err.textContent = m; err.style.display = "block"; };
+  const pname = document.getElementById("parent-name").value.trim().replace(/\s+/g, " ");
+  const pemail = document.getElementById("parent-email").value.trim().toLowerCase();
+  if (!pname || !pemail) return fail("Please enter the parent or guardian's name and email.");
+  if (!/^\p{L}[\p{L}'\u2019.\-]*( \p{L}[\p{L}'\u2019.\-]*)+$/u.test(pname)) return fail("Please enter the first and last name using letters only.");
+  if (!EMAIL_RE.test(pemail)) return fail("That email doesn't look right. Please check it, for example parent@example.com.");
+  if (pemail === studentInfo.email) return fail("Please use the parent or guardian's own email, not the student's.");
+  if (!document.getElementById("parent-ok").checked) return fail("Please tick the box to confirm you are the parent or guardian.");
+  err.textContent = "Checking the email..."; err.style.display = "block";
+  const ok = await checkEmailDomain(pemail);
+  if (!ok) return fail("We couldn't find a mailbox for that email's domain. Please check for typos.");
+  err.style.display = "none";
+  parentInfo = { name: pname, email: pemail };
+  goToStep(2);
+}
+
 function blockUnderAge() {
   responses = {};
   studentInfo = {};
@@ -587,7 +642,7 @@ function blockUnderAge() {
     <div class="card">
       <div class="domain-label">Not available</div>
       <p style="font-size:14.5px; line-height:1.5; color: var(--charcoal);">
-        This check-in is for ages 13 and up. Nothing has been saved or sent.
+        This check-in is for ages 10 and up. Nothing has been saved or sent.
         If you need support, please talk with a parent, a school counselor, or another trusted adult.
         If you need help right now, call or text 988.
       </p>
@@ -635,14 +690,14 @@ function submitCheckin() {
   // Age gate: this check-in is for ages 13 and up, and nothing is sent for younger users.
   const ageErr = document.getElementById("err-age");
   const ageNum = parseInt(responses["age"], 10);
-  if (!isNaN(ageNum) && ageNum < 13) {
-    ageErr.textContent = "This check-in is for ages 13 and up. Nothing has been saved. If you need support, please talk with a parent or a trusted adult.";
+  if (!isNaN(ageNum) && ageNum < MIN_AGE) {
+    ageErr.textContent = "This check-in is for ages 10 and up. Nothing has been saved. If you need support, please talk with a parent or a trusted adult.";
     ageErr.style.display = "block";
     ageErr.scrollIntoView({ behavior: "smooth", block: "center" });
     return;
   }
   if (!isNaN(ageNum) && ageNum > 129) {
-    ageErr.textContent = "Please enter an age between 13 and 129.";
+    ageErr.textContent = "Please enter an age between 10 and 129.";
     ageErr.style.display = "block";
     ageErr.scrollIntoView({ behavior: "smooth", block: "center" });
     return;
@@ -673,6 +728,7 @@ async function saveCheckin() {
     studentId: key || "unavailable",
     studentEmail: studentInfo.email,
     responses: responses,
+    ...(parentInfo && parseInt(responses.age, 10) < 13 ? { parentName: parentInfo.name, parentEmail: parentInfo.email, parentConsent: true } : {}),
     submittedAt: (typeof firebase !== "undefined" && firebase.firestore) ? firebase.firestore.FieldValue.serverTimestamp() : new Date().toISOString()
   };
 
