@@ -9,6 +9,7 @@ Mind the Gap is a free, optional student wellness check-in. This repository hold
 | chart.umd.js | Chart.js 4.4.4, a third-party charting library (MIT license), not written by me | JavaScript |
 | firestore.rules | Database security rules (who can write and read) | Firebase rules language |
 | set_counselor.js | One-time script that gives a Google account counselor access | JavaScript (Node.js) |
+| psyber_mentalytics_mlp_origin.py | Original research script (exported from a Google Colab notebook): data cleaning, charts, risk labels from the 12-question impact score, and the first MLP model and accuracy tests. The files below were adapted from it for the app | Python (scikit-learn) |
 | preprocess.py | Cleans the Kaggle dataset and builds model inputs | Python |
 | train_export.py | Trains the MLP models and saves them | Python (scikit-learn) |
 | api.py | Prediction API served on Render | Python (FastAPI) |
@@ -17,4 +18,5 @@ Mind the Gap is a free, optional student wellness check-in. This repository hold
 
 Services: Firebase Hosting, Firestore and Authentication; Render (API hosting); GitHub (code).
 Firebase JS SDK 10.13.0 is loaded from Google.
-Dataset: Kaggle "social-media-and-mental-health" (souvikahmed071).
+Note: psyber_mentalytics_mlp_origin.py is a Colab export, so it contains notebook-only lines (such as `!pip install`) and is meant to be read, not run as a normal script. The app itself runs preprocess.py, train_export.py and api.py.
+Dataset (not included, download from Kaggle): Kaggle "social-media-and-mental-health" (souvikahmed071).
