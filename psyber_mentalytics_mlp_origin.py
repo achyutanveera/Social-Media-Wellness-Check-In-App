@@ -244,7 +244,7 @@ plt.show()
 
 socialmedia["risk"] = "lower"
 socialmedia.loc[socialmedia[socialmedia.impact_sum >= 44].index, "risk"] = "higher"
-socialmedia.loc[socialmedia[(socialmedia.impact_sum < 44) & (socialmedia.impact_sum >= 32.31)].index, "risk"] = "medium"
+socialmedia.loc[socialmedia[(socialmedia.impact_sum < 44) & (socialmedia.impact_sum > 32)].index, "risk"] = "medium"
 socialmedia.risk = socialmedia.risk.astype("category")
 sns.histplot(x=socialmedia.impact_sum, bins=48, hue=socialmedia.risk);
 

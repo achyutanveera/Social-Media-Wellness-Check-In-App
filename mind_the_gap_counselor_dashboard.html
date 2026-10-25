@@ -58,6 +58,8 @@
   .chart-box h3 { font-size: 13px; margin: 0 0 8px; color: var(--dark); }
   .chart-box.wide { grid-column: 1 / -1; }
   .chart-box.wide .chart-wrap { position: relative; height: 215px; }
+  .color-key { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12.5px; color: var(--muted); margin: 0 0 12px; }
+  .color-key i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
   .chart-note { font-size: 12.5px; color: var(--muted); margin-top: 10px; line-height: 1.55; }
   .chart-note strong { color: var(--dark); }
   .flag-line { margin: 2px 0 8px; }
@@ -174,7 +176,8 @@ const LIKERT_LABELS = ["Never", "Rarely", "Sometimes", "Often", "Very Often"];
 const ITEMS = ["wo_purpose", "distracted", "restless", "distracted_scale", "worry_scale",
   "concentration", "compare_to_others", "compare_feelings", "validation",
   "depressed", "daily_activity_flux", "sleeping_issues"];
-const HIGH_CUT = 44, MED_CUT = 32.31;
+const HIGH_CUT = 44, MED_CUT = 32;          // overall: 32 or below lower, 33-43 medium, 44+ higher
+const SEC_HIGH_CUT = 11, SEC_MED_CUT = 8;   // each 3-question section: 8 or below lower, 9-10 medium, 11+ higher (one quarter of the overall cutoffs)
 // Every one of the 12 answers that make up the overall score is tracked (chart + trend flag), in questionnaire order.
 const TRACKED = {
   wo_purpose: "Using social media without a purpose",
@@ -195,7 +198,7 @@ function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 function impactSum(r) { return ITEMS.reduce((t, k) => t + (LIKERT[r?.[k]] || 0), 0); }
-function levelOf(sum) { return sum >= HIGH_CUT ? "higher" : sum >= MED_CUT ? "medium" : "lower"; }
+function levelOf(sum) { return sum >= HIGH_CUT ? "higher" : sum > MED_CUT ? "medium" : "lower"; }
 function itemScore(r, k) { return LIKERT[r?.[k]] || 0; }
 function rising(vals) { return vals.length === 3 && vals[1] > vals[0] && vals[2] > vals[1]; }
 function falling(vals) { return vals.length === 3 && vals[1] < vals[0] && vals[2] < vals[1]; }
@@ -416,6 +419,7 @@ function showDetail(studentId) {
         <span class="badge badge-level-${student.level}" style="margin-left:6px;">${student.level}</span></p>
       <div class="prob-row" id="model-row">Model estimate: ${API_URL ? "loading..." : "not connected (set API_URL to enable)"}</div>
     </div>
+    <div class="color-key"><span><i style="background:rgba(46,160,67,.45)"></i>Lower: overall 32 or below, each section 8 or below</span><span><i style="background:rgba(240,185,11,.55)"></i>Medium: overall 33 to 43, each section 9 to 10</span><span><i style="background:rgba(215,58,73,.45)"></i>Higher: overall 44 and up, each section 11 and up</span></div>
     <div class="chart-grid" id="chart-grid"></div>
     <div class="note-box">
       The model estimate is a second opinion from the Psyber Mentalytics classifier, trained on a university
@@ -447,6 +451,25 @@ function backToList() {
   document.getElementById("list-view").style.display = "block";
 }
 
+// Draws green / yellow / red background bands behind the line: green up to the lower cutoff,
+// yellow between the cutoffs, red from the higher cutoff up.
+const riskBands = {
+  id: "riskBands",
+  beforeDatasetsDraw(chart, args, o) {
+    if (!o || o.lo == null) return;
+    const { ctx, chartArea: a, scales: { y } } = chart;
+    const yAt = v => Math.max(a.top, Math.min(a.bottom, y.getPixelForValue(v)));
+    const bands = [[y.min, o.lo, "rgba(46,160,67,0.18)"], [o.lo, o.hi, "rgba(240,185,11,0.22)"], [o.hi, y.max, "rgba(215,58,73,0.18)"]];
+    ctx.save();
+    bands.forEach(([from, to, color]) => {
+      const top = yAt(to), bottom = yAt(from);
+      ctx.fillStyle = color;
+      ctx.fillRect(a.left, top, a.right - a.left, bottom - top);
+    });
+    ctx.restore();
+  }
+};
+
 function lineChart(grid, title, labels, series, yMin, yMax, step, opts = {}) {
   const box = document.createElement("div");
   box.className = "chart-box" + (opts.wide ? " wide" : "");
@@ -456,10 +479,11 @@ function lineChart(grid, title, labels, series, yMin, yMax, step, opts = {}) {
   new Chart(box.querySelector("canvas").getContext("2d"), {
     type: "line",
     data: { labels, datasets: series },
+    plugins: [riskBands],
     options: {
       responsive: true,
       maintainAspectRatio: !opts.wide,
-      plugins: { legend: { display: false } },
+      plugins: { legend: { display: false }, riskBands: { lo: opts.lo, hi: opts.hi } },
       scales: { y: { min: yMin, max: yMax, ticks: { stepSize: step } } }
     }
   });
@@ -474,7 +498,7 @@ function renderCharts(entries) {
     return;
   }
   const labels = entries.map((e, i) => "Check-in " + (i + 1));
-  const main = { borderColor: "#492F92", backgroundColor: "rgba(73,47,146,0.1)", tension: 0.3, fill: true, pointRadius: 3 };
+  const main = { borderColor: "#492F92", backgroundColor: "rgba(73,47,146,0.1)", tension: 0.3, fill: false, pointRadius: 3 };
   const guide = c => ({ borderColor: c, borderDash: [5, 4], borderWidth: 1, pointRadius: 0, fill: false });
   const t = computeTrends(entries);
   const jumps = computeJumps(entries);
@@ -489,11 +513,11 @@ function renderCharts(entries) {
   try {
     lineChart(grid, "Overall score (12–60)", labels, [
       { ...main, ...jumpPoints(j => j.overall), data: entries.map(e => impactSum(e.responses)) },
-      { ...guide("#BA7517"), data: entries.map(() => MED_CUT) },
-      { ...guide("#A32D2D"), data: entries.map(() => HIGH_CUT) }
+      { ...guide("#2E8B3D"), data: entries.map(() => MED_CUT) },
+      { ...guide("#C0392B"), data: entries.map(() => HIGH_CUT) }
     ], 12, 60, 12, {
-      wide: true,
-      noteHtml: (t.enough ? `<strong>Trend:</strong> ${trendWord(t.overall)} over the last three check-ins. Dashed lines mark the medium (33) and higher (44) cut-offs.` : needMore)
+      wide: true, lo: MED_CUT, hi: HIGH_CUT,
+      noteHtml: (t.enough ? `<strong>Trend:</strong> ${trendWord(t.overall)} over the last three check-ins. The colors show lower (green, 32 or below), medium (yellow, 33 to 43) and higher (red, 44 and up).` : needMore)
         + jumpNote(jumps, j => j.overall, n)
     });
   } catch (err) { console.error("Overall chart failed", err); }
@@ -508,7 +532,9 @@ function renderCharts(entries) {
       }
       note += jumpNote(jumps, j => (j.sections.find(z => z.name === x.sec.name) || {}).delta, n);
       lineChart(grid, x.sec.name + " (3–15)", labels,
-        [{ ...main, ...jumpPoints(j => j.sections.some(z => z.name === x.sec.name)), data: entries.map(e => sectionScore(e.responses, x.sec)) }], 3, 15, 3, { noteHtml: note });
+        [{ ...main, ...jumpPoints(j => j.sections.some(z => z.name === x.sec.name)), data: entries.map(e => sectionScore(e.responses, x.sec)) },
+         { ...guide("#2E8B3D"), data: entries.map(() => SEC_MED_CUT) },
+         { ...guide("#C0392B"), data: entries.map(() => SEC_HIGH_CUT) }], 3, 15, 3, { noteHtml: note, lo: SEC_MED_CUT, hi: SEC_HIGH_CUT });
     } catch (err) { console.error("Chart failed for " + x.sec.name, err); }
   });
 }

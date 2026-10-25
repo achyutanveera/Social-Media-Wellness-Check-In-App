@@ -2,7 +2,7 @@
 
 Mirrors the Psyber Mentalytics notebook (Social_Media_Mental_Health_Code.ipynb):
   - impact_sum = sum of the 12 Likert items (Q9-Q20)
-  - risk label = thresholds on impact_sum (>=44 higher, >=32.31 medium, else lower)
+  - risk label = thresholds on impact_sum (>=44 higher, >32 medium, else lower)
   - model features: age, depressed, restless, compare_to_others, impact_sum,
     platform_sum, plus one-hot of gender, rs, avg_time_per_day, age_group
 Training and the API both go through these functions so the columns always match.
@@ -34,7 +34,7 @@ RS = ["Divorced", "In a relationship", "Married", "Single"]
 AGE_GROUPS = ["<=20", "21-30", "31-40", "41-50", ">50"]
 
 HIGH_CUT = 44
-MED_CUT = 32.31
+MED_CUT = 32
 
 NUMBER_TO_KEY = {1: "age", 2: "gender", 3: "rs", 4: "occupation", 7: "sm_type",
                  8: "avg_time_per_day", 9: "wo_purpose", 10: "distracted", 11: "restless",
@@ -46,7 +46,7 @@ NUMBER_TO_KEY = {1: "age", 2: "gender", 3: "rs", 4: "occupation", 7: "sm_type",
 def risk_from_impact(s):
     if s >= HIGH_CUT:
         return "higher"
-    if s >= MED_CUT:
+    if s > MED_CUT:
         return "medium"
     return "lower"
 
