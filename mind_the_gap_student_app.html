@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mind the Gap: Your Wellness Checkpoint</title>
+<style>
+  :root {
+    --sage: #7A5FC0;
+    --eucalyptus: #5B3FA0;
+    --slate: #492F92;
+    --dark: #2A1B5E;
+    --offwhite: #F7F6FB;
+    --charcoal: #2B2538;
+    --muted: #6B6578;
+    --border: #E1DEEA;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--offwhite);
+    color: var(--charcoal);
+    margin: 0;
+    padding: 24px 16px 60px;
+  }
+  .app {
+    max-width: 560px;
+    margin: 0 auto;
+  }
+  .brand-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  .brand-header img, .brand-header svg {
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+  }
+  h1 {
+    font-size: 20px;
+    margin: 0 0 2px;
+    color: var(--dark);
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 13.5px;
+    margin: 0;
+  }
+  .progress {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 28px;
+  }
+  .progress-step {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+  }
+  .progress-step.active { background: var(--slate); }
+  .card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .domain-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--slate);
+    margin-bottom: 8px;
+  }
+  label.field-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--charcoal);
+  }
+  input[type="text"], input[type="email"], textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    margin-bottom: 16px;
+  }
+  textarea { resize: vertical; min-height: 70px; }
+  .question {
+    margin-bottom: 20px;
+  }
+  .question-text {
+    font-size: 14.5px;
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+  .scale-options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .scale-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13.5px;
+    cursor: pointer;
+  }
+  .scale-option:hover { background: var(--offwhite); }
+  .scale-option input { accent-color: var(--slate); }
+  .platform-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .platform-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13.5px;
+    cursor: pointer;
+  }
+  button {
+    background: var(--slate);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+  }
+  button:hover { background: var(--eucalyptus); }
+  button.secondary {
+    background: white;
+    color: var(--slate);
+    border: 1px solid var(--slate);
+    margin-top: 8px;
+  }
+  .btn-row { display: flex; gap: 10px; }
+  .btn-row button { flex: 1; }
+  .error-text {
+    color: #A32D2D;
+    font-size: 13px;
+    margin: -12px 0 12px;
+  }
+  .scale-options + .error-text,
+  .platform-grid + .error-text { margin: 8px 0 12px; }
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .note-box {
+    background: var(--offwhite);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: 16px;
+    line-height: 1.5;
+  }
+  /* ---- Quick break (just-for-fun questions) and brain break activities ---- */
+  .fun-card { background: #F4F0FC; border-color: #D8CEF1; }
+  .fun-progress { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px dashed #C9BCEB; border-radius: 12px; padding: 10px 14px; font-size: 14px; color: #4B3A82; }
+  .fun-progress .dots { display: flex; gap: 6px; flex: none; }
+  .fun-progress .dot { width: 14px; height: 14px; border-radius: 50%; background: #E3DCF5; transition: background .2s, transform .2s; }
+  .fun-progress .dot.on { background: #7B5EA7; transform: scale(1.15); }
+  .fun-skipped .question-text { margin-top: 6px; }
+  .fun-note { font-size: 13px; color: var(--muted); margin: 0 0 14px; }
+  .pic-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)); gap: 8px; }
+  .pic-opt { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 6px; background: white; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; font-size: 12.5px; text-align: center; }
+  .pic-opt input { position: absolute; opacity: 0; pointer-events: none; }
+  .pic-opt svg { width: 48px; height: 48px; }
+  .pic-opt small { display: block; font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 2px; }
+  .quote-card { background: #FFFBF0; border: 1px solid #F0DFA8; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+  .quote-card .who { font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #8A6A10; margin-bottom: 6px; }
+  .quote-card blockquote { margin: 0; font-size: 15.5px; line-height: 1.5; color: var(--dark); font-weight: 600; }
+  .quote-card .src { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+  .pic-opt:hover { border-color: var(--sage); }
+  .pic-opt.selected { border-color: var(--slate); background: #ECE6FA; font-weight: 600; }
+  .pic-opt:focus-within { outline: 2px solid var(--slate); outline-offset: 2px; }
+  .pill-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill-opt { padding: 9px 14px; background: white; border: 2px solid var(--border); border-radius: 999px; cursor: pointer; font-size: 13.5px; }
+  .pill-opt input { position: absolute; opacity: 0; pointer-events: none; }
+  .pill-opt.selected { border-color: var(--slate); background: #ECE6FA; font-weight: 600; }
+  .pill-opt:focus-within { outline: 2px solid var(--slate); outline-offset: 2px; }
+  .sidekick-line { display: flex; align-items: center; gap: 12px; background: #F4F0FC; border: 1px solid #D8CEF1; border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; font-size: 14px; }
+  .sidekick-line svg { width: 48px; height: 48px; flex: none; }
+  .brain-tiles { display: grid; gap: 10px; margin: 12px 0; }
+  .brain-tile { text-align: left; background: white; color: var(--charcoal); border: 2px solid var(--border); border-radius: 12px; padding: 12px 14px; cursor: pointer; font-size: 14px; }
+  .brain-tile:hover { border-color: var(--sage); }
+  .brain-tile b { color: var(--dark); display: block; margin-bottom: 2px; }
+  .brain-tile span.d { color: var(--muted); font-size: 13px; }
+  .tag-suggest { display: inline-block; font-size: 11px; font-weight: 700; color: #3B6D11; background: #F1F8EC; border-radius: 6px; padding: 2px 7px; margin-left: 6px; }
+  .game-card { border: 1px solid var(--border); border-radius: 12px; padding: 16px; background: white; margin-top: 8px; }
+  .game-card h3 { margin: 0 0 6px; font-size: 16px; color: var(--dark); }
+  .game-card p { font-size: 14px; line-height: 1.5; margin: 0 0 12px; }
+  .stage { height: 190px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; background: #F7F6FB; border-radius: 12px; padding: 14px; margin: 10px 0; }
+  .slot { height: 56px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 600; color: var(--dark); }
+  .dot { width: 22px; height: 22px; border-radius: 50%; background: var(--slate); }
+  .gng-stage { height: 150px; display: flex; align-items: center; justify-content: center; background: #F7F6FB; border-radius: 12px; margin: 10px 0; }
+  .gng-go { width: 80px; height: 80px; border-radius: 50%; background: #2E7BD6; }
+  .gng-stop { width: 80px; height: 80px; border-radius: 10px; background: #E8742A; }
+  .nback-grid { display: grid; grid-template-columns: repeat(3, 64px); gap: 8px; justify-content: center; margin: 12px 0; }
+  .nback-cell { width: 64px; height: 64px; border-radius: 10px; background: #ECE8F6; }
+  .nback-cell.on { background: var(--slate); }
+  .game-status { font-size: 13px; color: var(--muted); text-align: center; min-height: 18px; }
+  .breath-stage { display: flex; align-items: center; justify-content: center; background: #F7F6FB; border-radius: 12px; margin: 10px 0; padding: 14px 0; }
+  .box-wrap { position: relative; width: 180px; height: 180px; }
+  .box-line { position: absolute; left: 20px; top: 20px; width: 140px; height: 140px; border: 3px solid #C9BFE8; border-radius: 6px; }
+  .box-dot { position: absolute; left: 0; top: 0; width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 50%; background: var(--slate); box-shadow: 0 0 0 5px rgba(73,47,146,0.18); }
+  .box-count { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 700; color: var(--dark); }
+  .breath-cue { text-align: center; font-size: 16px; font-weight: 600; color: var(--dark); min-height: 24px; margin-bottom: 8px; }
+  .big-btn { width: 100%; padding: 16px; font-size: 16px; }
+  .result-box { background: #F1F8EC; border: 1px solid #B9D9A8; color: #2E5A0E; border-radius: 10px; padding: 12px 14px; font-size: 14px; line-height: 1.5; margin: 10px 0; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="brand-header">
+    <svg class="brand-logo" viewBox="0 0 64 64" role="img" aria-label="Mind the Gap logo"><rect width="64" height="64" rx="16" fill="#5B3FA0"/><rect x="6" y="40" width="22" height="9" rx="4" fill="#fff"/><rect x="36" y="40" width="22" height="9" rx="4" fill="#fff"/><circle cx="32" cy="24" r="10" fill="#F6B93B"/><path d="M27 24 L30.5 27.5 L37.5 20.5" stroke="#5B3FA0" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div>
+      <h1>Mind the Gap</h1>
+      <p class="subtitle">Your wellness checkpoint</p>
+    </div>
+  </div>
+
+  <div class="progress">
+    <div class="progress-step active" id="prog-1"></div>
+    <div class="progress-step" id="prog-2"></div>
+    <div class="progress-step" id="prog-3"></div>
+  </div>
+
+  <div id="step-1" class="step">
+    <div class="card">
+      <div class="domain-label">Your details</div>
+      <div id="school-login" style="display:none;">
+        <p style="font-size:14px; margin:0 0 10px;">Sign in with your school Google account to start.</p>
+        <button type="button" onclick="schoolSignIn()">Sign in with school account</button>
+        <div id="school-status" style="font-size:13px; color: var(--muted); margin-top:8px;"></div>
+      </div>
+      <div id="details-fields">
+        <label class="field-label">Full name</label>
+        <input type="text" id="student-name" maxlength="80" autocomplete="name" placeholder="First and last name"
+               oninput="this.value = this.value.replace(/[^\p{L} '\u2019.\-]/gu, '')">
+        <label class="field-label">Email</label>
+        <input type="email" id="student-email" maxlength="120" autocomplete="email" inputmode="email" placeholder="you@example.com"
+               oninput="this.value = this.value.replace(/\s/g, '')">
+        <p class="fun-note" style="margin:6px 0 0;">Only the counseling team can see your name and email. They are never shown to other students or anyone else.</p>
+      </div>
+      <div id="step1-error" class="error-text" style="display:none;"></div>
+    </div>
+    <div class="card">
+      <div class="domain-label">About you</div>
+      <div id="about-fields"></div>
+    </div>
+    <button onclick="goToStep(2)">Continue</button>
+    <div class="note-box">
+      Your responses are visible to the counseling team running this check-in. This check-in is optional,
+      is for ages 13 and up, and you can stop at any time.
+      This is not an emergency service. If you need help right now, call or text 988 (Suicide &amp; Crisis Lifeline)
+      or tell a trusted adult.
+    </div>
+  </div>
+
+  <div id="step-2" class="step" style="display:none;"></div>
+
+  <div id="step-3" class="step" style="display:none;"></div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script>
+// ---- Firebase setup ----
+// 1. Go to https://console.firebase.google.com, create a project.
+// 2. Build > Firestore Database > Create database (start in production mode).
+// 3. Build > Authentication > Sign-in method > enable "Anonymous" (for this demo;
+//    see the note at the bottom of this file about real identity for a real pilot).
+// 4. Project settings (gear icon) > General > "Your apps" > Web app > copy the config below.
+const firebaseConfig = {
+  apiKey: "AIzaSyDXlEO7Vfz89CdxFPxC9YJ-5BKvWAJQfuk",
+  authDomain: "apollo-wellness-check-in.firebaseapp.com",
+  projectId: "apollo-wellness-check-in",
+  storageBucket: "apollo-wellness-check-in.firebasestorage.app",
+  messagingSenderId: "53638541425",
+  appId: "1:53638541425:web:3994e69bffdab522b72bd0"
+};
+
+// ---- Sign-in mode ----
+// false = demo mode: anonymous sign-in, students type their name and ID (what judges use).
+// true  = pilot mode: students must sign in with their school Google account; name and ID
+//         come from the account. Pair this with firestore.rules.pilot.
+const SCHOOL_LOGIN_REQUIRED = false;
+const STUDENT_DOMAIN = "bsd48.org";
+
+let db = null;
+let firebaseReady = false;
+
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  if (SCHOOL_LOGIN_REQUIRED) {
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user && !user.isAnonymous) applyStudentUser(user);
+    });
+  } else {
+    firebase.auth().signInAnonymously()
+      .then(() => { firebaseReady = true; })
+      .catch((err) => { console.warn("Firebase auth not configured yet:", err.message); });
+  }
+} catch (err) {
+  console.warn("Firebase not configured yet — running in local-only demo mode.", err.message);
+}
+</script>
+<script>
+const scale5 = ["Never", "Rarely", "Sometimes", "Often", "Very Often"];
+
+const questions = [
+  // --- About you ---
+  { id: "age", domain: "About you", type: "number",
+    text: "What is your age?" },
+  { id: "gender", domain: "About you", type: "select",
+    text: "Gender",
+    options: ["Female", "Male", "Other"] },
+  { id: "rs", domain: "About you", type: "select",
+    text: "Relationship status",
+    options: ["Single", "In a relationship", "Married", "Divorced"] },
+  { id: "occupation", domain: "About you", type: "select",
+    text: "Occupation status",
+    options: ["School Student", "University Student", "Salaried Worker", "Retired"] },
+
+  // --- Social media use ---
+  { id: "sm_type", domain: "Social media use", type: "multi",
+    text: "What social media platforms do you commonly use?",
+    options: ["Facebook", "Instagram", "TikTok", "Snapchat", "YouTube", "Twitter/X", "Pinterest", "Discord", "Reddit", "Other"] },
+  { id: "avg_time_per_day", domain: "Social media use", type: "select",
+    text: "What is the average time you spend on social media every day?",
+    options: ["Less than 1 hour", "1-2 hours", "2-3 hours", "3-4 hours", "4-5 hours", "More than 5 hours"] },
+
+  // --- Online habits ---
+  { id: "wo_purpose", domain: "Online habits", type: "select",
+    text: "How often do you find yourself using social media without a specific purpose?",
+    options: scale5 },
+  { id: "distracted", domain: "Online habits", type: "select",
+    text: "How often do you get distracted by social media when you are busy doing something?",
+    options: scale5 },
+  { id: "restless", domain: "Online habits", type: "select",
+    text: "Do you feel restless if you haven't used social media in a while?",
+    options: scale5 },
+
+  // --- Focus and concentration ---
+  { id: "distracted_scale", domain: "Focus and concentration", type: "select",
+    text: "How easily distracted are you in general?",
+    options: scale5 },
+  { id: "worry_scale", domain: "Focus and concentration", type: "select",
+    text: "How much are you bothered by worries?",
+    options: scale5 },
+  { id: "concentration", domain: "Focus and concentration", type: "select",
+    text: "Do you find it difficult to concentrate on things?",
+    options: scale5 },
+
+  // --- Social comparison ---
+  { id: "compare_to_others", domain: "Social comparison", type: "select",
+    text: "How often do you compare yourself to other successful people through the use of social media?",
+    options: scale5 },
+  { id: "compare_feelings", domain: "Social comparison", type: "select",
+    text: "Following the previous question, how often do you feel insecure or negative about these comparisons, generally speaking?",
+    options: scale5 },
+  { id: "validation", domain: "Social comparison", type: "select",
+    text: "How often do you look to seek validation from features of social media?",
+    options: scale5 },
+
+  // --- Mood and sleep ---
+  { id: "depressed", domain: "Mood and sleep", type: "select",
+    text: "How often do you feel depressed or down?",
+    options: scale5 },
+  { id: "daily_activity_flux", domain: "Mood and sleep", type: "select",
+    text: "How frequently does your interest in daily activities fluctuate?",
+    options: scale5 },
+  { id: "sleeping_issues", domain: "Mood and sleep", type: "select",
+    text: "How often do you face issues regarding sleep?",
+    options: scale5 }
+];
+
+let studentInfo = {};
+let responses = {};
+
+function schoolSignIn() {
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ hd: STUDENT_DOMAIN, prompt: "select_account" });
+    firebase.auth().signInWithPopup(provider).catch(err => showSchoolStatus("Sign-in failed: " + err.message, true));
+  } catch (err) {
+    showSchoolStatus("Sign-in isn't available: " + err.message, true);
+  }
+}
+
+function showSchoolStatus(msg, isError) {
+  const el = document.getElementById("school-status");
+  el.textContent = msg;
+  el.style.color = isError ? "#A32D2D" : "var(--muted)";
+}
+
+function applyStudentUser(user) {
+  const email = (user.email || "").toLowerCase();
+  if (!email.endsWith("@" + STUDENT_DOMAIN)) {
+    firebase.auth().signOut();
+    firebaseReady = false;
+    showSchoolStatus("Please sign in with your @" + STUDENT_DOMAIN + " school account.", true);
+    return;
+  }
+  const nameEl = document.getElementById("student-name");
+  const idEl = document.getElementById("student-email");
+  nameEl.value = user.displayName || email.split("@")[0];
+  idEl.value = email;
+  nameEl.readOnly = true;
+  idEl.readOnly = true;
+  document.getElementById("details-fields").style.display = "block";
+  showSchoolStatus("Signed in as " + email, false);
+  firebaseReady = true;
+}
+
+if (SCHOOL_LOGIN_REQUIRED) {
+  document.getElementById("school-login").style.display = "block";
+  document.getElementById("details-fields").style.display = "none";
+}
+
+const EMAIL_RE = /^[a-z0-9._%+\-]{1,64}@([a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?\.)+[a-z]{2,24}$/;
+let emailCheck = { value: "", ok: null };
+// Returns true if the domain has mail records, false if it clearly does not exist,
+// and true (benefit of the doubt) if the lookup itself could not be done.
+async function checkEmailDomain(email) {
+  const domain = email.split("@")[1];
+  const ask = async type => {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 4000);
+    const r = await fetch("https://dns.google/resolve?name=" + encodeURIComponent(domain) + "&type=" + type, { signal: ctl.signal }).finally(() => clearTimeout(timer));
+    if (!r.ok) throw new Error("lookup failed");
+    return r.json();
+  };
+  try {
+    const mx = await ask("MX");
+    if (mx.Status === 0 && mx.Answer && mx.Answer.length) return true;
+    if (mx.Status === 3) return false;
+    const a = await ask("A");
+    return a.Status === 0 && !!(a.Answer && a.Answer.length);
+  } catch (e) { return true; }
+}
+async function sha256Hex(text) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+function goToStep(step) {
+  if (step === 2 && SCHOOL_LOGIN_REQUIRED && !firebaseReady) {
+    const errBox = document.getElementById("step1-error");
+    errBox.textContent = "Please sign in with your school account first.";
+    errBox.style.display = "block";
+    return;
+  }
+  if (step === 2) {
+    // Age gate first, so a user under 13 is stopped before anything else is checked.
+    const ageErr = document.getElementById("err-age");
+    const ageNum = parseInt(responses["age"], 10);
+    if (!isNaN(ageNum) && ageNum < 13) { blockUnderAge(); return; }
+    if (!isNaN(ageNum) && ageNum > 129) {
+      ageErr.textContent = "Please enter an age between 13 and 129.";
+      ageErr.style.display = "block";
+      ageErr.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    ageErr.textContent = "Please answer this question.";
+    const name = document.getElementById("student-name").value.trim().replace(/\s+/g, " ");
+    const email = document.getElementById("student-email").value.trim().toLowerCase();
+    const errBox = document.getElementById("step1-error");
+    if (!name || !email) {
+      errBox.textContent = "Please enter your name and email before continuing.";
+      errBox.style.display = "block";
+      return;
+    }
+    // First and last name: letters (any language), hyphens, apostrophes and periods only; at least two words.
+    if (!SCHOOL_LOGIN_REQUIRED && !/^\p{L}[\p{L}'\u2019.\-]*( \p{L}[\p{L}'\u2019.\-]*)+$/u.test(name)) {
+      errBox.textContent = "Please enter your first and last name using letters only (no numbers or symbols).";
+      errBox.style.display = "block";
+      return;
+    }
+    if (!EMAIL_RE.test(email)) {
+      errBox.textContent = "That email doesn't look right. Please check it, for example name@example.com.";
+      errBox.style.display = "block";
+      return;
+    }
+    // Ask Google's public DNS whether the email's domain can receive mail (once per address).
+    if (emailCheck.value !== email) {
+      errBox.textContent = "Checking your email...";
+      errBox.style.display = "block";
+      checkEmailDomain(email).then(ok => { emailCheck = { value: email, ok }; goToStep(2); });
+      return;
+    }
+    if (emailCheck.ok === false) {
+      errBox.textContent = "We couldn't find a mailbox for that email's domain. Please check for typos.";
+      errBox.style.display = "block";
+      return;
+    }
+    let aboutMissing = false;
+    questions.filter(q => q.domain === "About you").forEach(q => {
+      const answered = q.type === "multi" ? (responses[q.id] && responses[q.id].length > 0) : !!responses[q.id];
+      if (!answered) { document.getElementById("err-" + q.id).style.display = "block"; aboutMissing = true; }
+    });
+    if (aboutMissing) {
+      errBox.textContent = "Please answer the questions in 'About you' before continuing.";
+      errBox.style.display = "block";
+      return;
+    }
+    responses["age"] = String(ageNum); // "016" -> "16"
+    errBox.style.display = "none";
+    studentInfo = { name, email };
+    renderQuestionnaire();
+  }
+  document.getElementById("step-1").style.display = step === 1 ? "block" : "none";
+  document.getElementById("step-2").style.display = step === 2 ? "block" : "none";
+  document.getElementById("step-3").style.display = step === 3 ? "block" : "none";
+  document.getElementById("prog-1").classList.toggle("active", step >= 1);
+  document.getElementById("prog-2").classList.toggle("active", step >= 2);
+  document.getElementById("prog-3").classList.toggle("active", step >= 3);
+  window.scrollTo(0, 0);
+}
+
+function questionHtml(q) {
+  let html = `<div class="question"><div class="question-text">${q.text}</div>`;
+  if (q.type === "select") {
+    html += `<div class="scale-options">`;
+    q.options.forEach(opt => {
+      const chk = responses[q.id] === opt ? " checked" : "";
+      html += `<label class="scale-option"><input type="radio" name="${q.id}" value="${opt}"${chk} onchange="setResponse('${q.id}', this.value)"> ${opt}</label>`;
+    });
+    html += `</div>`;
+  } else if (q.type === "multi") {
+    html += `<div class="platform-grid">`;
+    q.options.forEach(opt => {
+      const chk = (responses[q.id] || []).includes(opt) ? " checked" : "";
+      html += `<label class="platform-chip"><input type="checkbox" value="${opt}"${chk} onchange="toggleMulti('${q.id}', '${opt}', this.checked)"> ${opt}</label>`;
+    });
+    html += `</div>`;
+  } else if (q.type === "number") {
+    html += `<input type="text" inputmode="numeric" maxlength="3" placeholder="e.g. 16" value="${responses[q.id] || ""}"
+      oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 3); setResponse('${q.id}', this.value);">`;
+  } else if (q.type === "text") {
+    html += `<textarea onblur="setResponse('${q.id}', this.value)" placeholder="Type here...">${responses[q.id] || ""}</textarea>`;
+  }
+  html += `<div class="error-text" id="err-${q.id}" style="display:none;">Please answer this question.</div></div>`;
+  return html;
+}
+
+// "About you" questions live on the first page so under-13 users are stopped there.
+function renderAbout() {
+  document.getElementById("about-fields").innerHTML =
+    questions.filter(q => q.domain === "About you").map(questionHtml).join("");
+}
+
+function blockUnderAge() {
+  responses = {};
+  studentInfo = {};
+  document.getElementById("step-1").innerHTML = `
+    <div class="card">
+      <div class="domain-label">Not available</div>
+      <p style="font-size:14.5px; line-height:1.5; color: var(--charcoal);">
+        This check-in is for ages 13 and up. Nothing has been saved or sent.
+        If you need support, please talk with a parent, a school counselor, or another trusted adult.
+        If you need help right now, call or text 988.
+      </p>
+    </div>`;
+  window.scrollTo(0, 0);
+}
+
+function renderQuestionnaire() {
+  const container = document.getElementById("step-2");
+  let html = "";
+  let currentDomain = "";
+  questions.filter(q => q.domain !== "About you").forEach(q => {
+    if (q.domain !== currentDomain) {
+      if (currentDomain !== "") html += "</div>";
+      if (q.domain === "Social comparison") html += funHtml(1);   // light questions in the middle of the check-in
+      if (q.domain === "Mood and sleep") html += funHtml(2);      // a second short break before the last section
+      html += `<div class="card"><div class="domain-label">${q.domain}</div>`;
+      currentDomain = q.domain;
+    }
+    html += questionHtml(q);
+  });
+  html += "</div>";
+  html += `<div class="btn-row"><button class="secondary" onclick="goToStep(1)">Back</button><button onclick="submitCheckin()">Submit check-in</button></div>`;
+  container.innerHTML = html;
+}
+
+function setResponse(id, value) {
+  responses[id] = value;
+  const err = document.getElementById("err-" + id);
+  if (err) err.style.display = "none";
+}
+
+function toggleMulti(id, option, checked) {
+  if (!responses[id]) responses[id] = [];
+  if (checked) {
+    responses[id].push(option);
+  } else {
+    responses[id] = responses[id].filter(o => o !== option);
+  }
+  const err = document.getElementById("err-" + id);
+  if (err && responses[id].length > 0) err.style.display = "none";
+}
+
+function submitCheckin() {
+  // Age gate: this check-in is for ages 13 and up, and nothing is sent for younger users.
+  const ageErr = document.getElementById("err-age");
+  const ageNum = parseInt(responses["age"], 10);
+  if (!isNaN(ageNum) && ageNum < 13) {
+    ageErr.textContent = "This check-in is for ages 13 and up. Nothing has been saved. If you need support, please talk with a parent or a trusted adult.";
+    ageErr.style.display = "block";
+    ageErr.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+  if (!isNaN(ageNum) && ageNum > 129) {
+    ageErr.textContent = "Please enter an age between 13 and 129.";
+    ageErr.style.display = "block";
+    ageErr.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+  if (!isNaN(ageNum)) responses["age"] = String(ageNum); // "016" -> "16"
+  ageErr.textContent = "Please answer this question.";
+  let missing = false;
+  questions.forEach(q => {
+    const answered = q.type === "multi" ? (responses[q.id] && responses[q.id].length > 0) : !!responses[q.id];
+    if (!answered) {
+      document.getElementById("err-" + q.id).style.display = "block";
+      missing = true;
+    }
+  });
+  if (missing) {
+    document.querySelector(".error-text[style*='block']")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+  saveCheckin();
+}
+
+async function saveCheckin() {
+  // The database key is a one-way hash of the email, so the address never appears in a path or URL.
+  let key;
+  try { key = await sha256Hex(studentInfo.email); } catch (e) { key = null; }
+  const entry = {
+    studentName: studentInfo.name,
+    studentId: key || "unavailable",
+    studentEmail: studentInfo.email,
+    responses: responses,
+    submittedAt: (typeof firebase !== "undefined" && firebase.firestore) ? firebase.firestore.FieldValue.serverTimestamp() : new Date().toISOString()
+  };
+
+  if (db && firebaseReady) {
+    db.collection("checkins").doc(entry.studentId).collection("entries").add(entry)
+      .then(() => {
+        renderSummary(true);
+        goToStep(3);
+      })
+      .catch((err) => {
+        console.error("Error saving check-in:", err);
+        renderSummary(false, err.message);
+        goToStep(3);
+      });
+  } else {
+    renderSummary(false, "Firebase isn't configured yet — this submission wasn't saved anywhere.");
+    goToStep(3);
+  }
+}
+
+const RESULT_ORDER = ["sidekick", "recharge", "power", "character", "afternoon", "person"];
+function funResultHtml(id) {
+  const v = fun[id];
+  const row = (art, text) => `<div class="sidekick-line">${ART[art]}<span>${text}</span></div>`;
+  if (!v) return "";
+  if (id === "sidekick") return SIDEKICK_LINES[v] ? row(v, SIDEKICK_LINES[v]) : "";
+  if (id === "recharge" && RECHARGE[v]) return row(RECHARGE[v].art, RECHARGE[v].line);
+  if (id === "power" && POWERS[v]) return row(POWERS[v].art, POWERS[v].line);
+  if (id === "character" && CHARACTERS[v]) return row(CHARACTERS[v].art, `<b>${CHARACTERS[v].name}: ${CHARACTERS[v].tag}</b><br>${CHARACTERS[v].line}`);
+  if (id === "afternoon" && AFTERNOONS[v]) return row(AFTERNOONS[v].art, AFTERNOONS[v].line);
+  if (id === "person" && PEOPLE[v]) return `<div class="quote-card"><div class="who">A thought from ${PEOPLE[v].name}</div><blockquote>“${PEOPLE[v].quote}”</blockquote><div class="src">${PEOPLE[v].src}</div></div>`;
+  return "";
+}
+function funSkippedHtml() {
+  const skipped = RESULT_ORDER.filter(id => !fun[id]);
+  if (!skipped.length) return "";
+  let html = `<div class="card fun-card fun-skipped"><div class="domain-label">Psst, you skipped a few</div>
+    <p class="fun-note">${skipped.length === RESULT_ORDER.length ? "Want a little surprise? Pick any of these and your result shows up right above." : "Still curious? Pick any of these and your result shows up right above. Totally optional, and still not saved anywhere."}</p>`;
+  skipped.forEach(id => {
+    const q = FUN.find(x => x.id === id);
+    html += `<div class="question"><div class="question-text">${q.text}</div><div class="pic-grid">`;
+    q.options.forEach(([val, label, art, tag]) => {
+      html += `<label class="pic-opt"><input type="radio" name="late-${q.id}" value="${val}" onchange="pickLate('${q.id}', this.value)">${ART[art || val]}<span>${label}${tag ? `<small>${tag}</small>` : ""}</span></label>`;
+    });
+    html += `</div></div>`;
+  });
+  return html + `</div>`;
+}
+function funResultsHtml() {
+  return RESULT_ORDER.map(funResultHtml).join("") + `<div id="fun-skipped">${funSkippedHtml()}</div>`;
+}
+function pickLate(id, val) {
+  fun[id] = val;
+  document.getElementById("fun-results").innerHTML = funResultsHtml();
+}
+function renderSummary(saved, errorMsg) {
+  const container = document.getElementById("step-3");
+  const statusBox = saved
+    ? `<div class="note-box" style="border-color:#B9D9A8; background:#F1F8EC; color:#3B6D11;">Saved to the counseling team's system.</div>`
+    : `<div class="note-box" style="border-color:#F0C79B; background:#FDF4E9; color:#854F0B;">${errorMsg || "This submission wasn't saved."}</div>`;
+  container.innerHTML = `
+    <div class="card">
+      <div class="domain-label">Check-in complete</div>
+      <p style="font-size:14.5px; line-height:1.5; color: var(--charcoal);">
+        Thanks, ${studentInfo.name}. Your responses have been recorded for the counseling team to review.
+      </p>
+      <div class="summary-row"><span>Student</span><span>${studentInfo.name}</span></div>
+      <div class="summary-row"><span>Email</span><span>${studentInfo.email}</span></div>
+      <div class="summary-row"><span>Questions answered</span><span>${Object.keys(responses).length} of ${questions.length}</span></div>
+    </div>
+    ${statusBox}
+    <div id="fun-results">${funResultsHtml()}</div>
+    <div class="card">
+      <div class="domain-label">Optional brain break</div>
+      <p style="font-size:14px; line-height:1.5; margin:0 0 6px;">
+        Feeling worn out by scrolling? Try one of these short activities, about a minute each.
+        They are for practice and fun, they are not treatment, and nothing you do here is saved or sent.
+        Research on this kind of training is still mixed, so a real break (water, a walk, texting a friend) counts too.
+      </p>
+      ${brainTilesHtml()}
+    </div>
+    <div class="note-box">
+      Raw responses are stored under this format so they can later be scored by the trained prediction model — this screen doesn't show a risk score itself; that happens on the counselor side.
+    </div>
+    <button class="secondary" onclick="location.reload()">Start a new check-in</button>
+  `;
+}
+
+
+// ---------- Quick break: light questions (not scored, never saved or sent) ----------
+const svg = body => `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">${body}</svg>`;
+const ART = {
+  Fox: svg(`<polygon points="8,8 26,24 10,36" fill="#E8742A"/><polygon points="56,8 38,24 54,36" fill="#E8742A"/><polygon points="12,14 22,24 13,30" fill="#F8C9A8"/><polygon points="52,14 42,24 51,30" fill="#F8C9A8"/><path d="M8 32 Q32 4 56 32 Q54 54 32 60 Q10 54 8 32Z" fill="#F08A3C"/><path d="M10 40 Q32 58 54 40 Q48 56 32 60 Q16 56 10 40Z" fill="#FFF7EE"/><circle cx="22" cy="34" r="2.8" fill="#2B2538"/><circle cx="42" cy="34" r="2.8" fill="#2B2538"/><ellipse cx="32" cy="50" rx="4" ry="3" fill="#2B2538"/>`),
+  Owl: svg(`<polygon points="12,8 24,20 10,26" fill="#7A5A3C"/><polygon points="52,8 40,20 54,26" fill="#7A5A3C"/><ellipse cx="32" cy="36" rx="22" ry="24" fill="#8B6B4A"/><ellipse cx="32" cy="44" rx="13" ry="15" fill="#E3D0AE"/><circle cx="22" cy="28" r="10" fill="#FFFFFF"/><circle cx="42" cy="28" r="10" fill="#FFFFFF"/><circle cx="22" cy="28" r="4.5" fill="#2B2538"/><circle cx="42" cy="28" r="4.5" fill="#2B2538"/><polygon points="28,33 36,33 32,41" fill="#F2A33A"/>`),
+  Octopus: svg(`<path d="M14 40 Q9 54 18 58 M25 44 Q22 60 30 60 M39 44 Q42 60 34 60 M50 40 Q55 54 46 58" stroke="#9B6FD6" stroke-width="7" stroke-linecap="round" fill="none"/><circle cx="32" cy="27" r="20" fill="#9B6FD6"/><circle cx="24" cy="26" r="5.5" fill="#FFFFFF"/><circle cx="40" cy="26" r="5.5" fill="#FFFFFF"/><circle cx="24" cy="27" r="2.6" fill="#2B2538"/><circle cx="40" cy="27" r="2.6" fill="#2B2538"/><path d="M26 37 Q32 42 38 37" stroke="#2B2538" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="17" cy="34" r="3" fill="#C7A8F0"/><circle cx="47" cy="34" r="3" fill="#C7A8F0"/>`),
+  Otter: svg(`<circle cx="15" cy="17" r="6" fill="#8A5A3C"/><circle cx="49" cy="17" r="6" fill="#8A5A3C"/><circle cx="32" cy="34" r="22" fill="#9A6A48"/><ellipse cx="32" cy="43" rx="14" ry="10" fill="#EBD7BC"/><circle cx="23" cy="31" r="3" fill="#2B2538"/><circle cx="41" cy="31" r="3" fill="#2B2538"/><ellipse cx="32" cy="38" rx="4.5" ry="3.2" fill="#2B2538"/><path d="M32 41 L32 46 M27 46 Q32 50 37 46" stroke="#2B2538" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M18 42 L8 40 M18 45 L8 47 M46 42 L56 40 M46 45 L56 47" stroke="#6B4630" stroke-width="1.4" stroke-linecap="round"/>`),
+  Dragon: svg(`<polygon points="16,24 12,6 28,18" fill="#F2C14E"/><polygon points="48,24 52,6 36,18" fill="#F2C14E"/><ellipse cx="32" cy="36" rx="22" ry="20" fill="#4FAF7A"/><ellipse cx="32" cy="47" rx="12" ry="8" fill="#86D3A4"/><circle cx="22" cy="31" r="6" fill="#FFFFFF"/><circle cx="42" cy="31" r="6" fill="#FFFFFF"/><circle cx="22" cy="32" r="3" fill="#2B2538"/><circle cx="42" cy="32" r="3" fill="#2B2538"/><circle cx="28" cy="46" r="1.8" fill="#2E7D55"/><circle cx="36" cy="46" r="1.8" fill="#2E7D55"/><path d="M27 52 Q32 55 37 52" stroke="#2E7D55" stroke-width="1.8" fill="none" stroke-linecap="round"/>`),
+  Beach: svg(`<rect width="64" height="64" rx="10" fill="#C4E5F6"/><circle cx="46" cy="18" r="8" fill="#F6C453"/><rect y="36" width="64" height="28" fill="#4A9FD8"/><path d="M0 50 Q22 40 64 52 L64 64 L0 64Z" fill="#EBD6A2"/><path d="M8 44 Q16 40 24 44" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round"/>`),
+  Mountains: svg(`<rect width="64" height="64" rx="10" fill="#D3E5F3"/><polygon points="2,54 24,16 46,54" fill="#6C7A9C"/><polygon points="30,54 46,26 62,54" fill="#8A97B8"/><polygon points="24,16 18,28 30,28" fill="#FFFFFF"/><polygon points="46,26 42,34 50,34" fill="#FFFFFF"/><rect y="54" width="64" height="10" fill="#7FB285"/>`),
+  "Cozy room": svg(`<rect width="64" height="64" rx="10" fill="#F4E7D6"/><rect x="38" y="8" width="18" height="20" rx="2" fill="#BFE3F5" stroke="#B88A5A" stroke-width="2"/><path d="M47 8 V28 M38 18 H56" stroke="#B88A5A" stroke-width="1.5"/><rect x="6" y="38" width="52" height="16" rx="4" fill="#9B8BD6"/><rect x="9" y="31" width="18" height="10" rx="4" fill="#FFFFFF"/><rect x="6" y="54" width="4" height="6" fill="#8A6A48"/><rect x="54" y="54" width="4" height="6" fill="#8A6A48"/>`),
+  Forest: svg(`<rect width="64" height="64" rx="10" fill="#D8EBD3"/><rect x="17" y="40" width="5" height="14" fill="#7A5A3C"/><polygon points="19.5,10 6,34 33,34" fill="#3E8E5A"/><polygon points="19.5,22 4,46 35,46" fill="#4FA56B"/><rect x="43" y="42" width="5" height="14" fill="#7A5A3C"/><polygon points="45.5,16 33,38 58,38" fill="#3E8E5A"/><polygon points="45.5,28 31,50 60,50" fill="#4FA56B"/>`),
+
+  Heart: svg(`<rect width="64" height="64" rx="10" fill="#FBE3E6"/><path d="M32 52 C10 36 12 18 24 18 C29 18 32 22 32 24 C32 22 35 18 40 18 C52 18 54 36 32 52Z" fill="#E4586B"/><path d="M20 26 Q22 22 26 22" stroke="#FFFFFF" stroke-width="2.5" fill="none" stroke-linecap="round"/>`),
+  Target: svg(`<rect width="64" height="64" rx="10" fill="#E4F0E8"/><circle cx="30" cy="34" r="22" fill="#3E8E5A"/><circle cx="30" cy="34" r="15" fill="#FFFFFF"/><circle cx="30" cy="34" r="8" fill="#3E8E5A"/><circle cx="30" cy="34" r="3" fill="#F2C14E"/><path d="M52 12 L31 33" stroke="#7A5A3C" stroke-width="3" stroke-linecap="round"/><polygon points="52,12 58,12 52,18" fill="#E4586B"/>`),
+  Compass: svg(`<rect width="64" height="64" rx="10" fill="#E8EEF7"/><circle cx="32" cy="32" r="22" fill="#FFFFFF" stroke="#6C7A9C" stroke-width="3"/><g stroke="#6C7A9C" stroke-width="2.5" stroke-linecap="round"><path d="M32 12 V16 M32 48 V52 M12 32 H16 M48 32 H52"/></g><g transform="rotate(40 32 32)"><polygon points="32,15 38,32 26,32" fill="#E4586B"/><polygon points="32,49 38,32 26,32" fill="#8A97B8"/></g><circle cx="32" cy="32" r="3" fill="#2B2538"/>`),
+  Moon: svg(`<rect width="64" height="64" rx="10" fill="#232A52"/><path d="M40 12 A21 21 0 1 0 52 42 A17 17 0 1 1 40 12Z" fill="#F5E6A8"/><g fill="#FFFFFF"><circle cx="14" cy="16" r="2"/><circle cx="50" cy="14" r="1.6"/><circle cx="22" cy="50" r="1.6"/><circle cx="54" cy="52" r="2"/></g>`),
+  Controller: svg(`<rect width="64" height="64" rx="10" fill="#E4E8F7"/><rect x="8" y="22" width="48" height="24" rx="12" fill="#5A6BC0"/><rect x="17" y="30" width="12" height="4" rx="1" fill="#FFFFFF"/><rect x="21" y="26" width="4" height="12" rx="1" fill="#FFFFFF"/><circle cx="42" cy="36" r="3.4" fill="#F2C14E"/><circle cx="49" cy="31" r="3.4" fill="#E4586B"/>`),
+  Friends: svg(`<rect width="64" height="64" rx="10" fill="#FDE9D8"/><path d="M26 56 Q26 40 42 40 Q58 40 58 56Z" fill="#8E7CD6"/><circle cx="42" cy="28" r="8" fill="#F5CBA7"/><path d="M6 56 Q6 40 22 40 Q38 40 38 56Z" fill="#F0A36B"/><circle cx="22" cy="28" r="8" fill="#FBD9B5"/><path d="M18 31 Q22 35 26 31 M38 31 Q42 35 46 31" stroke="#2B2538" stroke-width="1.6" fill="none" stroke-linecap="round"/>`),
+  Sun: svg(`<rect width="64" height="64" rx="10" fill="#FFF1C9"/><g stroke="#F6B93B" stroke-width="4" stroke-linecap="round"><path d="M32 8 V14 M32 50 V56 M8 32 H14 M50 32 H56 M15 15 L19 19 M45 45 L49 49 M49 15 L45 19 M19 45 L15 49"/></g><circle cx="32" cy="32" r="14" fill="#F6B93B"/><circle cx="27" cy="29" r="2" fill="#2B2538"/><circle cx="37" cy="29" r="2" fill="#2B2538"/><path d="M26 35 Q32 41 38 35" stroke="#2B2538" stroke-width="2" fill="none" stroke-linecap="round"/>`),
+  Medal: svg(`<rect width="64" height="64" rx="10" fill="#E3EEF9"/><path d="M20 6 L28 28 H36 L44 6Z" fill="#E4572E"/><path d="M26 6 L32 22 L38 6Z" fill="#F4F1EA"/><circle cx="32" cy="40" r="15" fill="#F6B93B"/><circle cx="32" cy="40" r="10" fill="#FFD76A"/><path d="M32 33 L34.3 38 L39.5 38.5 L35.6 42 L36.8 47 L32 44.4 L27.2 47 L28.4 42 L24.5 38.5 L29.7 38Z" fill="#F6B93B"/>`),
+  Clock: svg(`<rect width="64" height="64" rx="10" fill="#E3EEF9"/><circle cx="32" cy="33" r="19" fill="#FFFFFF" stroke="#4A6FA5" stroke-width="4"/><path d="M32 21 V33 L40 38" stroke="#4A6FA5" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="27" y="6" width="10" height="5" rx="2" fill="#4A6FA5"/>`),
+  Wing: svg(`<rect width="64" height="64" rx="10" fill="#CFE8F7"/><path d="M10 42 C14 22 34 12 56 16 C48 20 44 24 42 28 C48 27 52 27 56 28 C48 32 42 36 40 40 C44 40 47 41 50 43 C36 50 20 52 10 42Z" fill="#FFFFFF" stroke="#6C9BC4" stroke-width="2.5" stroke-linejoin="round"/>`),
+  Portal: svg(`<rect width="64" height="64" rx="10" fill="#EDE3F7"/><ellipse cx="32" cy="34" rx="13" ry="21" fill="#7B5EA7"/><ellipse cx="32" cy="34" rx="8" ry="15" fill="#B79BE0"/><ellipse cx="32" cy="34" rx="3.5" ry="8" fill="#EDE3F7"/><path d="M52 12 L54 17 L59 19 L54 21 L52 26 L50 21 L45 19 L50 17Z" fill="#F6B93B"/>`),
+  Paw: svg(`<rect width="64" height="64" rx="10" fill="#E4F2DF"/><g fill="#6B8E4E"><ellipse cx="32" cy="42" rx="12" ry="9"/><ellipse cx="17" cy="30" rx="5" ry="6.5"/><ellipse cx="27" cy="20" rx="5" ry="6.5"/><ellipse cx="38" cy="20" rx="5" ry="6.5"/><ellipse cx="48" cy="30" rx="5" ry="6.5"/></g>`),
+  Bolt: svg(`<rect width="64" height="64" rx="10" fill="#FFF3CC"/><path d="M36 6 L16 36 H29 L25 58 L48 25 H34Z" fill="#F6B93B" stroke="#D9951A" stroke-width="2.5" stroke-linejoin="round"/>`),
+  Sunrise: svg(`<rect width="64" height="64" rx="10" fill="#FDE3C8"/><g stroke="#F6B93B" stroke-width="3.5" stroke-linecap="round"><path d="M32 8 V15 M12 20 L17 25 M52 20 L47 25 M5 36 H12 M52 36 H59"/></g><path d="M14 44 A18 18 0 0 1 50 44Z" fill="#F6B93B"/><rect y="44" width="64" height="20" fill="#8DA9C4"/><path d="M10 52 H26 M34 56 H54" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>`),
+  Bridge: svg(`<rect width="64" height="64" rx="10" fill="#D6E8F2"/><rect y="46" width="64" height="18" fill="#7FB0D5"/><path d="M4 42 Q32 8 60 42" stroke="#6C7A9C" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M4 42 H60" stroke="#6C7A9C" stroke-width="4"/><path d="M16 42 V26 M24 42 V19 M32 42 V17 M40 42 V19 M48 42 V26" stroke="#8A97B8" stroke-width="2.5"/>`),
+  Pencil: svg(`<rect width="64" height="64" rx="10" fill="#FFF1D6"/><g transform="rotate(45 32 32)"><rect x="26" y="8" width="12" height="38" fill="#F2C14E"/><rect x="26" y="8" width="12" height="7" fill="#E88CA0"/><polygon points="26,46 38,46 32,58" fill="#F0D5B0"/><polygon points="29.5,52 34.5,52 32,58" fill="#2B2538"/></g>`),
+  Clapper: svg(`<rect width="64" height="64" rx="10" fill="#E6E3EF"/><rect x="10" y="26" width="44" height="26" rx="3" fill="#2B2538"/><g transform="rotate(-9 10 24)"><rect x="10" y="14" width="44" height="10" rx="2" fill="#2B2538"/><g fill="#FFFFFF"><polygon points="16,14 22,14 18,24 12,24"/><polygon points="28,14 34,14 30,24 24,24"/><polygon points="40,14 46,14 42,24 36,24"/></g></g><path d="M16 34 H48 M16 42 H40" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>`),
+  Notes: svg(`<rect width="64" height="64" rx="10" fill="#EDE3F7"/><ellipse cx="21" cy="46" rx="7" ry="5" fill="#7A5FC0"/><ellipse cx="44" cy="40" rx="7" ry="5" fill="#7A5FC0"/><path d="M28 46 V16 L51 10 V40" stroke="#7A5FC0" stroke-width="3.5" fill="none"/><path d="M28 24 L51 18" stroke="#7A5FC0" stroke-width="4"/>`),
+  Rooftop: svg(`<rect width="64" height="64" rx="10" fill="#2B2B52"/><circle cx="48" cy="14" r="6" fill="#F5F0D0"/><rect x="6" y="30" width="16" height="30" fill="#3C3C72"/><rect x="24" y="22" width="18" height="38" fill="#4A4A86"/><rect x="44" y="34" width="14" height="26" fill="#3C3C72"/><g fill="#F6C453"><rect x="10" y="35" width="3" height="3"/><rect x="15" y="43" width="3" height="3"/><rect x="29" y="28" width="3" height="3"/><rect x="35" y="36" width="3" height="3"/><rect x="29" y="46" width="3" height="3"/><rect x="48" y="40" width="3" height="3"/></g>`)
+};
+const FUN = [
+  { id: "sidekick", group: 1, text: "You get one animal sidekick for a road trip. Who rides along?", kind: "pic",
+    options: [["Fox", "Fox"], ["Owl", "Owl"], ["Octopus", "Octopus"], ["Otter", "Otter"], ["Dragon", "Dragon"]] },
+  { id: "recharge", group: 1, text: "Where would you go to recharge after a long week?", kind: "pic",
+    options: [["Beach", "Beach"], ["Mountains", "Mountains"], ["Cozy room", "Cozy room"], ["Forest", "Forest"], ["Rooftop", "City rooftop"]] },
+  { id: "power", group: 1, text: "Pick a superpower for one day.", kind: "pic",
+    options: [["Pause time", "Pause time", "Clock"], ["Fly", "Fly anywhere", "Wing"], ["Teleport", "Teleport home", "Portal"], ["Animals", "Talk to animals", "Paw"], ["Energy", "Never get tired", "Bolt"]] },
+  { id: "character", group: 2, text: "Which fictional character can you relate to the most?", kind: "pic",
+    options: [["Wednesday", "Wednesday Addams", "Compass", "The sharp-witted original"], ["Peter", "Peter Parker", "Heart", "The dependable one"],
+              ["Katniss", "Katniss Everdeen", "Target", "The resilient protector"], ["Dumbledore", "Albus Dumbledore", "Moon", "The wise mentor"],
+              ["SpongeBob", "SpongeBob", "Sun", "The upbeat optimist"]] },
+  { id: "person", group: 2, text: "Which famous person do you look up to the most?", kind: "pic",
+    options: [["Biles", "Simone Biles", "Medal", "Athlete"], ["Mandela", "Nelson Mandela", "Bridge", "Civil rights and politics"],
+              ["Malala", "Malala Yousafzai", "Pencil", "Education activist"], ["Boseman", "Chadwick Boseman", "Clapper", "Actor"],
+              ["Swift", "Taylor Swift", "Notes", "Singer"]] },
+  { id: "afternoon", group: 2, text: "You get a totally free afternoon. What do you do?", kind: "pic",
+    options: [["Music", "Listen to music", "Notes"], ["Make", "Draw or build something", "Pencil"], ["Outside", "Go outside", "Forest"],
+              ["Game", "Play a game", "Controller"], ["Friends", "Hang out with friends", "Friends"]] }
+];
+let fun = {};   // stays on this device; deliberately kept out of `responses` so it is never saved or scored
+
+function funHtml(group) {
+  let html = `<div class="card fun-card"><div class="domain-label">${group === 2 ? "Another quick break" : "Quick break, just for fun"}</div>
+    <p class="fun-note">${group === 2 ? "Three more just-for-fun questions. They are still not part of your check-in, and not scored, saved or sent anywhere." : "These are not part of your check-in. They are not scored, saved or sent anywhere. Skip them if you like."}</p>`;
+  FUN.filter(q => q.group === group).forEach(q => {
+    html += `<div class="question"><div class="question-text">${q.text}</div><div class="${q.kind === "pic" ? "pic-grid" : "pill-grid"}">`;
+    q.options.forEach(([val, label, art, tag]) => {
+      const sel = fun[q.id] === val;
+      html += q.kind === "pic"
+        ? `<label class="pic-opt${sel ? " selected" : ""}"><input type="radio" name="fun-${q.id}" value="${val}"${sel ? " checked" : ""} onchange="setFun('${q.id}', this)">${ART[art || val]}<span>${label}${tag ? `<small>${tag}</small>` : ""}</span></label>`
+        : `<label class="pill-opt${sel ? " selected" : ""}"><input type="radio" name="fun-${q.id}" value="${val}"${sel ? " checked" : ""} onchange="setFun('${q.id}', this)">${label}</label>`;
+    });
+    html += `</div></div>`;
+  });
+  return html + `<div class="fun-progress" id="fun-progress-${group}">${funProgressHtml(group)}</div></div>`;
+}
+const PROGRESS_MSGS = [
+  "Pick all three to see your results at the end. No pressure, but they are fun.",
+  "Nice start, two to go!",
+  "Just one more for the full set!",
+  "Full set! Your results are waiting at the end."
+];
+function funProgressHtml(group) {
+  const qs = FUN.filter(q => q.group === group);
+  const n = qs.filter(q => fun[q.id]).length;
+  const dots = qs.map((q, i) => `<span class="dot${i < n ? " on" : ""}"></span>`).join("");
+  return `<span class="dots">${dots}</span><span>${n} of ${qs.length} picked. ${PROGRESS_MSGS[n]}</span>`;
+}
+function setFun(id, input) {
+  fun[id] = input.value;
+  const g = FUN.find(q => q.id === id).group;
+  const prog = document.getElementById("fun-progress-" + g);
+  if (prog) prog.innerHTML = funProgressHtml(g);
+  document.querySelectorAll(`input[name="fun-${id}"]`).forEach(el => el.parentElement.classList.toggle("selected", el.checked));
+}
+// Icons are original symbols for each trait, not likenesses. Quotes are real, with the source they come from.
+const CHARACTERS = {
+  Wednesday: { name: "Wednesday Addams", tag: "The sharp-witted original", art: "Compass",
+    line: "You relate to Wednesday, so you are independent, quick-witted, and not interested in following the crowd just because it is popular. Being an original is a strength, and the right people like you exactly as you are." },
+  Peter: { name: "Peter Parker", tag: "The dependable one", art: "Heart",
+    line: "You relate to Peter Parker, so you show up for people, keep your word, and still find a joke when life gets busy. Being the dependable one is a gift. It is okay to let someone else carry the load sometimes." },
+  Katniss: { name: "Katniss Everdeen", tag: "The resilient protector", art: "Target",
+    line: "You relate to Katniss, so you are tough, protective of the people you love, and calm when it counts. Your strength is real. You do not have to carry everything alone, though." },
+  Dumbledore: { name: "Albus Dumbledore", tag: "The wise mentor", art: "Moon",
+    line: "You relate to Dumbledore, so you are wise, kind, and the person others go to for calm advice. You see the bigger picture and still make time for people. Save some of that kindness for yourself too." },
+  SpongeBob: { name: "SpongeBob", tag: "The upbeat optimist", art: "Sun",
+    line: "You relate to SpongeBob, so you bring good energy, find fun in small things, and cheer people up without trying. That kind of optimism is rare. Keep it, and take breaks to recharge." }
+};
+const PEOPLE = {
+  Biles: { name: "Simone Biles", art: "Medal",
+    quote: "You will not always be strong, but you can always be brave.", src: "Courage to Soar, 2016" },
+  Mandela: { name: "Nelson Mandela", art: "Bridge",
+    quote: "I learned that courage was not the absence of fear, but the triumph over it.", src: "Long Walk to Freedom, 1994" },
+  Malala: { name: "Malala Yousafzai", art: "Pencil",
+    quote: "One child, one teacher, one book, and one pen can change the world.", src: "Speech at the United Nations Youth Assembly, 2013" },
+  Boseman: { name: "Chadwick Boseman", art: "Clapper",
+    quote: "Purpose is an essential element of you. It is the reason you are on the planet at this particular time in history.", src: "Howard University commencement speech, 2018" },
+  Swift: { name: "Taylor Swift", art: "Notes",
+    quote: "Decide what is yours to hold and let the rest go.", src: "NYU commencement speech, 2022" }
+};
+const AFTERNOONS = {
+  Music: { art: "Notes", line: "Your free afternoon: music. Next time you catch yourself scrolling out of habit, try playing a song you love for ten minutes instead." },
+  Make: { art: "Pencil", line: "Your free afternoon: making something. Next time you catch yourself scrolling out of habit, try sketching or building something small for ten minutes." },
+  Outside: { art: "Forest", line: "Your free afternoon: outside. Next time you catch yourself scrolling out of habit, try a ten-minute walk, even just around the block." },
+  Game: { art: "Controller", line: "Your free afternoon: a game. Next time you catch yourself scrolling out of habit, try a game you chose on purpose and play one round." },
+  Friends: { art: "Friends", line: "Your free afternoon: friends. Next time you catch yourself scrolling out of habit, send one friend a message or make a plan." }
+};
+const RECHARGE = {
+  Beach: { art: "Beach", line: "Your recharge spot: the beach. Slow, open space helps your mind reset. Next time you feel worn out, try ten minutes of quiet with no screen, even just looking out a window." },
+  Mountains: { art: "Mountains", line: "Your recharge spot: the mountains. You reset by getting some distance and a bigger view. Next time you feel worn out, try stepping outside and looking at something far away for a few minutes." },
+  "Cozy room": { art: "Cozy room", line: "Your recharge spot: a cozy room. You reset best somewhere calm and safe. Next time you feel worn out, try dimming the lights and putting your phone in another room for a bit." },
+  Forest: { art: "Forest", line: "Your recharge spot: the forest. Quiet and green helps you slow down. Next time you feel worn out, try a short walk where you leave your phone in your pocket." },
+  Rooftop: { art: "Rooftop", line: "Your recharge spot: a city rooftop. You reset by getting above the noise. Next time you feel worn out, try a few minutes of looking at the sky before you pick up your phone." }
+};
+const POWERS = {
+  "Pause time": { art: "Clock", line: "Your superpower: pausing time. You can create that now, in a small way. Try a two-minute pause before you open an app, and see what you actually wanted." },
+  Fly: { art: "Wing", line: "Your superpower: flying. You like freedom and a fresh view. Try a short walk or a change of scenery when you feel stuck, instead of scrolling." },
+  Teleport: { art: "Portal", line: "Your superpower: teleporting home. Rest and comfort matter to you. Try making a calm spot at home where phones stay away for a while." },
+  Animals: { art: "Paw", line: "Your superpower: talking to animals. You are curious and care about others. Time with a pet or outside is a good break from the feed." },
+  Energy: { art: "Bolt", line: "Your superpower: never getting tired. Real energy comes from sleep and breaks, so try putting your phone down 30 minutes before bed tonight." }
+};
+const SIDEKICK_LINES = {
+  Fox: "Fox says: clever beats rushed, and breaks count as part of the plan.",
+  Owl: "Owl says: the best thinking happens after some rest.",
+  Octopus: "Octopus says: eight arms, and none of them need to hold your phone right now.",
+  Otter: "Otter says: float, snack, repeat. Breaks are allowed.",
+  Dragon: "Dragon says: guard your energy like treasure."
+};
+
+// ---------- Brain break: short practice activities (nothing here is saved or sent) ----------
+const LIK = ["Never", "Rarely", "Sometimes", "Often", "Very Often"];
+const lik = k => LIK.indexOf(responses[k]) + 1;
+let gTimers = [], gKeyFn = null;
+function gClear() { gTimers.forEach(t => clearTimeout(t)); gTimers = []; gKeyFn = null; }
+function gLater(fn, ms) { gTimers.push(setTimeout(fn, ms)); }
+document.addEventListener("keydown", e => { if (gKeyFn && e.code === "Space") { e.preventDefault(); gKeyFn(); } });
+const gArea = () => document.getElementById("game-area");
+
+function brainTilesHtml() {
+  const tiles = [
+    { id: "attention", title: "Focus game", desc: "Tap where the dot lands. Gently trains your attention toward calmer things when your feed pulls it elsewhere.",
+      suggest: lik("worry_scale") >= 4 || lik("compare_feelings") >= 4 || lik("compare_to_others") >= 4 || lik("validation") >= 4 },
+    { id: "stopgo", title: "Stop and go", desc: "Tap for the blue circle, hold back for the orange square. Practice pausing before you tap.",
+      suggest: lik("wo_purpose") >= 4 || lik("distracted") >= 4 },
+    { id: "memory", title: "Memory boost", desc: "Spot when a square lights up in the same place as before. Works the part of your mind that keeps track of things.",
+      suggest: lik("concentration") >= 4 || lik("distracted_scale") >= 4 },
+    { id: "winddown", title: "Square breathing", desc: "One minute of box breathing: in, hold, out, hold, four counts each. A calm way to end the day or take a break from your phone.",
+      suggest: lik("sleeping_issues") >= 4 || lik("depressed") >= 4 || lik("daily_activity_flux") >= 4 }
+  ];
+  return `<div class="brain-tiles">` + tiles.map(t =>
+    `<button type="button" class="brain-tile" onclick="startGame('${t.id}')"><b>${t.title}${t.suggest ? '<span class="tag-suggest">Suggested for you</span>' : ""}</b><span class="d">${t.desc}</span></button>`
+  ).join("") + `</div><div id="game-area"></div>`;
+}
+function startGame(id) {
+  gClear();
+  ({ attention: gameAttention, stopgo: gameStopGo, memory: gameMemory, winddown: gameWinddown })[id]();
+  gArea().scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+function gameIntro(title, text, startLabel, onStart, extra) {
+  gArea().innerHTML = `<div class="game-card"><h3>${title}</h3><p>${text}</p>${extra || ""}<button type="button" id="g-start">${startLabel}</button></div>`;
+  document.getElementById("g-start").onclick = onStart;
+}
+function gameResult(title, text, again) {
+  gClear();
+  gArea().innerHTML = `<div class="game-card"><h3>${title}</h3><div class="result-box">${text}</div>
+    <div class="btn-row"><button type="button" class="secondary" id="g-again">Play again</button><button type="button" class="secondary" id="g-close">Done</button></div></div>`;
+  document.getElementById("g-again").onclick = again;
+  document.getElementById("g-close").onclick = () => { gArea().innerHTML = ""; };
+}
+
+// 1) Focus game (dot-probe style attention practice): the dot always lands where the calmer word was.
+function gameAttention() {
+  const NEG = ["left out", "judged", "behind", "awkward", "ignored", "failing"];
+  const CALM = ["calm", "friends", "relaxed", "kind", "sunny", "curious"];
+  const TOTAL = 16;
+  const run = () => {
+    let n = 0, right = 0, late = 0, pos = "top", accepting = false, token = 0;
+    gArea().innerHTML = `<div class="game-card"><h3>Focus game</h3>
+      <div class="game-status" id="g-status"></div>
+      <div class="stage"><div class="slot" id="slot-top"></div><div class="slot" id="slot-bottom"></div></div>
+      <div class="btn-row"><button type="button" id="g-top">Top</button><button type="button" id="g-bottom">Bottom</button></div></div>`;
+    const top = document.getElementById("slot-top"), bottom = document.getElementById("slot-bottom"), status = document.getElementById("g-status");
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+    const answer = side => {
+      if (!accepting) return;
+      accepting = false;
+      if (side === pos) right++;
+      top.textContent = bottom.textContent = "";
+      gLater(trial, 350);
+    };
+    document.getElementById("g-top").onclick = () => answer("top");
+    document.getElementById("g-bottom").onclick = () => answer("bottom");
+    function trial() {
+      if (n >= TOTAL) return gameResult("Nice work",
+        `You matched ${right} of ${TOTAL} dots${late ? ` (${late} ran out of time)` : ""}. Each round the dot landed where the calmer word was. Notice how it feels to look toward the calm words first.`, run);
+      n++;
+      status.textContent = `Round ${n} of ${TOTAL}`;
+      top.textContent = bottom.textContent = "";
+      top.textContent = "+";
+      gLater(() => {
+        top.textContent = ""; bottom.textContent = "";
+        pos = Math.random() < 0.5 ? "top" : "bottom";
+        const calm = pick(CALM), neg = pick(NEG);
+        (pos === "top" ? top : bottom).textContent = calm;
+        (pos === "top" ? bottom : top).textContent = neg;
+        gLater(() => {
+          top.textContent = bottom.textContent = "";
+          (pos === "top" ? top : bottom).innerHTML = `<span class="dot"></span>`;
+          accepting = true;
+          const mine = ++token;
+          gLater(() => {          // one second to answer, then the round counts as missed
+            if (accepting && token === mine) { accepting = false; late++; top.textContent = bottom.textContent = ""; gLater(trial, 350); }
+          }, 1000);
+        }, 700);
+      }, 500);
+    }
+    trial();
+  };
+  gameIntro("Focus game", "Two words flash, one above the other. Then a dot appears where one of them was. Tap <b>Top</b> or <b>Bottom</b> to match the dot, within one second. It takes about a minute.", "Start", run);
+}
+
+// 2) Stop and go (go/no-go): impulse control practice.
+function gameStopGo() {
+  const TOTAL = 30;
+  const run = () => {
+    let i = 0, tapped = false, isGo = true, goHit = 0, goCount = 0, held = 0, stopCount = 0, active = false;
+    gArea().innerHTML = `<div class="game-card"><h3>Stop and go</h3>
+      <div class="game-status" id="g-status"></div>
+      <div class="gng-stage" id="gng"></div>
+      <button type="button" class="big-btn" id="g-tap">Tap</button></div>`;
+    const stage = document.getElementById("gng"), status = document.getElementById("g-status");
+    const tap = () => { if (active) tapped = true; };
+    document.getElementById("g-tap").onclick = tap;
+    gKeyFn = tap;
+    function next() {
+      if (i >= TOTAL) return gameResult("Nice work",
+        `You tapped the blue circle ${goHit} of ${goCount} times, and held back on ${held} of ${stopCount} orange squares. Holding back is the skill: it is the same pause that helps before opening an app out of habit.`, run);
+      i++;
+      status.textContent = `${i} of ${TOTAL}`;
+      isGo = Math.random() > 0.3; tapped = false; active = true;
+      stage.innerHTML = isGo ? `<div class="gng-go"></div>` : `<div class="gng-stop"></div>`;
+      gLater(() => {
+        active = false; stage.innerHTML = "";
+        if (isGo) { goCount++; if (tapped) goHit++; } else { stopCount++; if (!tapped) held++; }
+        gLater(next, 400);
+      }, 800);
+    }
+    next();
+  };
+  gameIntro("Stop and go", "Tap <b>Tap</b> (or press the space bar) when you see a <b>blue circle</b>. When you see an <b>orange square</b>, do nothing. It takes about a minute.", "Start", run);
+}
+
+// 4) Square (box) breathing: breathe in 4, hold 4, breathe out 4, hold 4. A dot travels around a square, one side per phase.
+function gameWinddown() {
+  const ROUNDS = 4, SIDE = 4000;
+  // Corners of the square inside the 180px box: bottom-left, top-left, top-right, bottom-right.
+  const C = [[20, 160], [20, 20], [160, 20], [160, 160]];
+  const PHASES = ["Breathe in", "Hold", "Breathe out", "Hold"];
+  const run = () => {
+    gArea().innerHTML = `<div class="game-card"><h3>Square breathing</h3>
+      <div class="game-status" id="g-status"></div>
+      <div class="breath-stage"><div class="box-wrap"><div class="box-line"></div><div class="box-dot" id="dot"></div><div class="box-count" id="count"></div></div></div>
+      <div class="breath-cue" id="g-cue"></div></div>`;
+    const dot = document.getElementById("dot"), count = document.getElementById("count"),
+          cue = document.getElementById("g-cue"), status = document.getElementById("g-status");
+    const place = (pt, ms) => { dot.style.transition = ms ? `transform ${ms}ms linear` : "none"; dot.style.transform = `translate(${pt[0]}px, ${pt[1]}px)`; };
+    place(C[0], 0);
+    let side = 0, round = 1;
+    function step() {
+      if (side === 4) { side = 0; round++; }
+      if (round > ROUNDS) return gameResult("Nicely done",
+        `You finished ${ROUNDS} rounds of square breathing. It is a steady rhythm you can use anywhere, for example before bed or before you pick up your phone.`, run);
+      status.textContent = `Round ${round} of ${ROUNDS}`;
+      cue.textContent = PHASES[side];
+      void dot.offsetWidth;
+      place(C[(side + 1) % 4], SIDE);
+      for (let k = 0; k < 4; k++) gLater(() => { count.textContent = k + 1; }, k * (SIDE / 4));
+      side++;
+      gLater(step, SIDE);
+    }
+    step();
+  };
+  gameIntro("Square breathing", "Follow the dot around the square. Breathe in as it goes up, hold along the top, breathe out as it goes down, and hold along the bottom. Count to four on each side. Four rounds, about a minute. Sit comfortably and relax your shoulders.", "Start", run);
+}
+
+// 3) Memory boost (n-back with a 3x3 grid): working memory practice.
+function gameMemory() {
+  const choose = N => {
+    const LEN = 18 + N;
+    const seq = [];
+    for (let k = 0; k < LEN; k++) {
+      let c;
+      if (k >= N && Math.random() < 0.3) c = seq[k - N];
+      else { do { c = Math.floor(Math.random() * 9); } while (k >= N && c === seq[k - N]); }
+      seq.push(c);
+    }
+    let k = 0, pressed = false, hits = 0, misses = 0, falseAlarms = 0, active = false;
+    gArea().innerHTML = `<div class="game-card"><h3>Memory boost (${N}-back)</h3>
+      <div class="game-status" id="g-status"></div>
+      <div class="nback-grid" id="grid">${Array.from({ length: 9 }, (_, j) => `<div class="nback-cell" id="cell-${j}"></div>`).join("")}</div>
+      <button type="button" class="big-btn" id="g-same">Same spot as ${N === 1 ? "last time" : "two turns ago"}</button></div>`;
+    const status = document.getElementById("g-status");
+    const press = () => { if (active) pressed = true; };
+    document.getElementById("g-same").onclick = press;
+    gKeyFn = press;
+    function step() {
+      document.querySelectorAll(".nback-cell").forEach(c => c.classList.remove("on"));
+      if (k >= LEN) return gameResult("Nice work",
+        `You spotted ${hits} of ${hits + misses} repeats, with ${falseAlarms} extra taps. ${N === 1 ? "Ready for a harder one? Try 2-back next." : "Two-back is tough. Any score here is a good start."}`,
+        () => gameMemory());
+      status.textContent = `${k + 1} of ${LEN}`;
+      document.getElementById("cell-" + seq[k]).classList.add("on");
+      pressed = false; active = true;
+      const match = k >= N && seq[k] === seq[k - N];
+      gLater(() => {
+        active = false;
+        if (match) { if (pressed) hits++; else misses++; } else if (pressed) falseAlarms++;
+        k++;
+        document.querySelectorAll(".nback-cell").forEach(c => c.classList.remove("on"));
+        gLater(step, 300);
+      }, 1700);
+    }
+    step();
+  };
+  gameIntro("Memory boost",
+    "A square lights up in a 3x3 grid, one at a time. Tap the button when the square is in the <b>same spot as the one before</b>. Pick a level to start. It takes about a minute.",
+    "Start 1-back (easier)", () => choose(1),
+    `<div style="margin-bottom:10px;"><button type="button" class="secondary" id="g-two">Start 2-back (harder)</button></div>`);
+  document.getElementById("g-two").onclick = () => choose(2);
+}
+
+renderAbout();
+</script>
+</body>
+</html>

@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mind the Gap — Counselor Dashboard</title>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="chart.umd.js"></script>
+<style>
+  :root {
+    --purple: #492F92;
+    --purple-light: #7A5FC0;
+    --dark: #2A1B5E;
+    --offwhite: #F7F6FB;
+    --charcoal: #2B2538;
+    --muted: #6B6578;
+    --border: #E1DEEA;
+    --amber: #BA7517;
+    --amber-bg: #FDF4E9;
+    --green: #3B6D11;
+    --green-bg: #F1F8EC;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--offwhite);
+    color: var(--charcoal);
+    margin: 0;
+    padding: 20px 16px 60px;
+  }
+  .app { max-width: 780px; margin: 0 auto; }
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+  h1 { font-size: 20px; margin: 0 0 2px; color: var(--dark); }
+  .subtitle { color: var(--muted); font-size: 13.5px; margin: 0; }
+  button {
+    background: var(--purple); color: white; border: none; border-radius: 8px;
+    padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  button:hover { background: var(--purple-light); }
+  button.secondary { background: white; color: var(--purple); border: 1px solid var(--purple); }
+  .card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin-bottom: 14px; }
+  .center-card { max-width: 380px; margin: 80px auto; text-align: center; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  td { padding: 10px; border-bottom: 1px solid var(--border); }
+  tr.student-row { cursor: pointer; }
+  tr.student-row:hover { background: var(--offwhite); }
+  .badge { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 3px 8px; border-radius: 6px; margin-right: 4px; }
+  .badge-flag { background: var(--amber-bg); color: var(--amber); }
+  .badge-ok { background: var(--green-bg); color: var(--green); }
+  .badge-improve { background: var(--green-bg); color: var(--green); }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) { .chart-grid { grid-template-columns: 1fr; } }
+  .chart-box { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+  .chart-box h3 { font-size: 13px; margin: 0 0 8px; color: var(--dark); }
+  .chart-box.wide { grid-column: 1 / -1; }
+  .chart-box.wide .chart-wrap { position: relative; height: 215px; }
+  .chart-note { font-size: 12.5px; color: var(--muted); margin-top: 10px; line-height: 1.55; }
+  .chart-note strong { color: var(--dark); }
+  .flag-line { margin: 2px 0 8px; }
+  .flag-items { font-size: 11.5px; color: var(--muted); margin: 3px 0 0 2px; line-height: 1.5; }
+  .badge-jump { background: #FBEAEA; color: #A32D2D; }
+  .jump { color: #A32D2D; font-weight: 700; }
+  .up { color: var(--amber); font-weight: 700; }
+  .down { color: var(--green); font-weight: 700; }
+  .back-link { color: var(--purple); font-size: 14px; cursor: pointer; margin-bottom: 14px; display: inline-block; }
+  .demo-banner { background: var(--amber-bg); color: var(--amber); border: 1px solid #F0C79B; border-radius: 8px; padding: 8px 12px; font-size: 12.5px; margin-bottom: 14px; }
+  .badge-level-lower { background: var(--green-bg); color: var(--green); }
+  .badge-level-medium { background: var(--amber-bg); color: var(--amber); }
+  .badge-level-higher { background: #FBEAEA; color: #A32D2D; }
+  .prob-row { display: flex; gap: 14px; font-size: 13px; margin-top: 8px; color: var(--muted); }
+  .note-box { background: var(--offwhite); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="center-card card" id="signin-view">
+    <h1>Counselor dashboard</h1>
+    <p class="subtitle" style="margin-bottom:18px;">Mind the Gap &middot; Your wellness checkpoint</p>
+    <button onclick="signIn()">Sign in with Google</button>
+    <div style="margin-top:10px;"><button class="secondary" onclick="startDemo()">View demo data</button></div>
+    <div class="note-box" style="text-align:left;">
+      Access is restricted to accounts with counselor permissions, set up by school IT.
+      Signing in here doesn't grant access by itself — see the setup notes at the bottom of this file.
+    </div>
+  </div>
+
+  <div id="main-view" style="display:none;">
+    <div class="header">
+      <div>
+        <h1>Student check-ins</h1>
+        <p class="subtitle">Mind the Gap &middot; Your wellness checkpoint</p>
+      </div>
+      <button class="secondary" onclick="signOutUser()">Sign out</button>
+    </div>
+    <div class="demo-banner" id="demo-banner" style="display:none;">Demo data: synthetic students for illustration only, not real check-ins.</div>
+    <div id="list-view"></div>
+    <div id="detail-view" style="display:none;"></div>
+  </div>
+</div>
+
+<script>
+// ---- Settings ----
+// Optional: URL of the prediction API (backend/api.py), e.g. "https://your-api.onrender.com".
+// Leave empty to run without it. Scores, trends and flags are computed in this page,
+// so the dashboard works either way; the API only adds the model's estimate.
+const API_URL = "https://social-media-wellness-check-in-app.onrender.com";
+
+// ---- Firebase setup ----
+// Use the SAME Firebase project as the student check-in app.
+const firebaseConfig = {
+  apiKey: "AIzaSyDXlEO7Vfz89CdxFPxC9YJ-5BKvWAJQfuk",
+  authDomain: "apollo-wellness-check-in.firebaseapp.com",
+  projectId: "apollo-wellness-check-in",
+  storageBucket: "apollo-wellness-check-in.firebasestorage.app",
+  messagingSenderId: "53638541425",
+  appId: "1:53638541425:web:3994e69bffdab522b72bd0"
+};
+
+// Leave "" to allow any Google account (access is still gated by the counselor permission).
+// For a pilot, set to the staff domain, e.g. "beaverton.k12.or.us".
+const COUNSELOR_DOMAIN = "";
+
+let db = null;
+let auth = null;
+let demoMode = false;
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  auth = firebase.auth();
+  auth.onAuthStateChanged(user => {
+    if (demoMode) return;
+    if (user && !user.isAnonymous && COUNSELOR_DOMAIN &&
+        !(user.email || "").toLowerCase().endsWith("@" + COUNSELOR_DOMAIN)) {
+      auth.signOut();
+      alert("Please sign in with your @" + COUNSELOR_DOMAIN + " staff account.");
+      return;
+    }
+    if (user && !user.isAnonymous) {
+      showMain();
+      loadStudents();
+    } else {
+      document.getElementById("signin-view").style.display = "block";
+      document.getElementById("main-view").style.display = "none";
+    }
+  });
+} catch (err) {
+  console.warn("Firebase not configured yet.", err.message);
+}
+
+function showMain() {
+  document.getElementById("signin-view").style.display = "none";
+  document.getElementById("main-view").style.display = "block";
+}
+
+function signIn() {
+  if (!auth) { alert("Firebase isn't configured yet — add your project config near the top of this file, or use the demo data."); return; }
+  const provider = new firebase.auth.GoogleAuthProvider();
+  if (COUNSELOR_DOMAIN) provider.setCustomParameters({ hd: COUNSELOR_DOMAIN });
+  auth.signInWithPopup(provider).catch(err => alert("Sign-in failed: " + err.message));
+}
+
+function signOutUser() {
+  if (demoMode) { location.reload(); return; }
+  auth.signOut();
+}
+
+// ---- Scoring (same definition the model was trained on) ----
+const LIKERT = { "Never": 1, "Rarely": 2, "Sometimes": 3, "Often": 4, "Very Often": 5 };
+const LIKERT_LABELS = ["Never", "Rarely", "Sometimes", "Often", "Very Often"];
+const ITEMS = ["wo_purpose", "distracted", "restless", "distracted_scale", "worry_scale",
+  "concentration", "compare_to_others", "compare_feelings", "validation",
+  "depressed", "daily_activity_flux", "sleeping_issues"];
+const HIGH_CUT = 44, MED_CUT = 32.31;
+// Every one of the 12 answers that make up the overall score is tracked (chart + trend flag), in questionnaire order.
+const TRACKED = {
+  wo_purpose: "Using social media without a purpose",
+  distracted: "Distracted by social media",
+  restless: "Restless without social media",
+  distracted_scale: "Easily distracted in general",
+  worry_scale: "Bothered by worries",
+  concentration: "Difficulty concentrating",
+  compare_to_others: "Comparing self to others online",
+  compare_feelings: "Insecure after comparing",
+  validation: "Seeking validation online",
+  depressed: "Feeling down",
+  daily_activity_flux: "Interest in activities fluctuates",
+  sleeping_issues: "Sleep problems"
+};
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function impactSum(r) { return ITEMS.reduce((t, k) => t + (LIKERT[r?.[k]] || 0), 0); }
+function levelOf(sum) { return sum >= HIGH_CUT ? "higher" : sum >= MED_CUT ? "medium" : "lower"; }
+function itemScore(r, k) { return LIKERT[r?.[k]] || 0; }
+function rising(vals) { return vals.length === 3 && vals[1] > vals[0] && vals[2] > vals[1]; }
+function falling(vals) { return vals.length === 3 && vals[1] < vals[0] && vals[2] < vals[1]; }
+
+// The 12 scored answers fall into 4 sections of 3 (same sections as the questionnaire).
+const SECTIONS = [
+  { name: "Online habits", items: ["wo_purpose", "distracted", "restless"] },
+  { name: "Focus and concentration", items: ["distracted_scale", "worry_scale", "concentration"] },
+  { name: "Social comparison", items: ["compare_to_others", "compare_feelings", "validation"] },
+  { name: "Mood and sleep", items: ["depressed", "daily_activity_flux", "sleeping_issues"] }
+];
+function sectionScore(r, sec) { return sec.items.reduce((t, k) => t + itemScore(r, k), 0); }   // 3-15
+function direction(vals) { return rising(vals) ? "up" : falling(vals) ? "down" : null; }
+function arrow(d) { return d === "up" ? "↑" : "↓"; }
+
+// A trend needs three check-ins in a row moving the same way, never a single high or low score.
+// Checked for the overall score, for each section total, and for each individual answer.
+function computeTrends(entriesAsc) {
+  const enough = entriesAsc.length >= 3;
+  const last3 = entriesAsc.slice(-3).map(e => e.responses || {});
+  return {
+    enough,
+    overall: enough ? direction(last3.map(impactSum)) : null,
+    sections: SECTIONS.map(sec => ({
+      sec,
+      dir: enough ? direction(last3.map(r => sectionScore(r, sec))) : null,
+      items: enough
+        ? sec.items.map(k => ({ key: k, label: TRACKED[k], dir: direction(last3.map(r => itemScore(r, k))) })).filter(i => i.dir)
+        : []
+    }))
+  };
+}
+
+// Flags shown in the student list: the overall score and any section that is moving,
+// with the individual answers inside a moving section that are also moving.
+// A sudden jump is a big rise between two check-ins in a row: overall score +8 or more,
+// or a section total (3 answers) +4 or more.
+const OVERALL_JUMP = 8, SECTION_JUMP = 4;
+function computeJumps(entriesAsc) {
+  const out = [];
+  for (let i = 1; i < entriesAsc.length; i++) {
+    const a = entriesAsc[i - 1].responses || {}, b = entriesAsc[i].responses || {};
+    const o = impactSum(b) - impactSum(a);
+    const secs = SECTIONS.map(sec => ({ name: sec.name, delta: sectionScore(b, sec) - sectionScore(a, sec) }))
+      .filter(x => x.delta >= SECTION_JUMP);
+    if (o >= OVERALL_JUMP || secs.length) out.push({ at: i + 1, overall: o >= OVERALL_JUMP ? o : null, sections: secs });
+  }
+  return out;
+}
+function jumpNote(jumps, pick, n) {
+  const hits = jumps.map(j => ({ at: j.at, d: pick(j) })).filter(h => h.d);
+  if (!hits.length) return "";
+  return `<br><strong>Sudden increase:</strong> ` +
+    hits.map(h => `<span class="jump">+${h.d}</span> at check-in ${h.at}${h.at === n ? " (latest)" : ""}`).join(" · ");
+}
+
+function computeFlags(entriesAsc) {
+  const t = computeTrends(entriesAsc);
+  const flags = [];
+  // Sudden jumps in the most recent check-in come first, since they need attention soonest.
+  const latest = computeJumps(entriesAsc).find(j => j.at === entriesAsc.length);
+  if (latest) {
+    if (latest.overall) flags.push({ label: "Sudden jump: Overall score +" + latest.overall, dir: "jump", items: [] });
+    latest.sections.forEach(x => flags.push({ label: "Sudden jump: " + x.name + " +" + x.delta, dir: "jump", items: [] }));
+  }
+  if (t.overall) flags.push({ label: "Overall score", dir: t.overall, items: [] });
+  t.sections.forEach(x => { if (x.dir) flags.push({ label: x.sec.name, dir: x.dir, items: x.items }); });
+  return flags;
+}
+function flagHtml(f) {
+  const sub = f.items.length
+    ? `<div class="flag-items">${f.items.map(i => `${esc(i.label)} <span class="${i.dir}">${arrow(i.dir)}</span>`).join(" · ")}</div>`
+    : "";
+  return `<div class="flag-line"><span class="badge ${f.dir === "jump" ? "badge-jump" : f.dir === "down" ? "badge-improve" : "badge-flag"}">${esc(f.label)}${f.dir === "jump" ? "" : " " + arrow(f.dir)}</span>${sub}</div>`;
+}
+
+// ---- Data loading ----
+async function loadStudents() {
+  const listView = document.getElementById("list-view");
+  listView.innerHTML = `<div class="card"><p style="color:var(--muted); font-size:14px;">Loading check-ins...</p></div>`;
+  try {
+    // One query across every student's "entries" collection, grouped by student here.
+    const snap = await db.collectionGroup("entries").get();
+    if (snap.empty) {
+      listView.innerHTML = `<div class="card"><div class="empty-state">No check-ins yet. Once students start submitting, they'll show up here.</div></div>`;
+      return;
+    }
+    const byStudent = {};
+    snap.docs.forEach(d => {
+      const e = d.data();
+      const id = e.studentId || d.ref.parent.parent.id;
+      (byStudent[id] = byStudent[id] || []).push(e);
+    });
+    const millis = e => {
+      const t = e.submittedAt;
+      if (!t) return Number.MAX_SAFE_INTEGER;           // just written, timestamp not resolved yet
+      if (typeof t.toMillis === "function") return t.toMillis();
+      return new Date(t).getTime() || 0;
+    };
+    const students = Object.keys(byStudent).map(id =>
+      buildStudent(id, byStudent[id].sort((x, y) => millis(x) - millis(y))));
+    renderStudentList(students);
+  } catch (err) {
+    listView.innerHTML = `<div class="card"><div class="empty-state">Couldn't load check-ins: ${esc(err.message)}<br><br>Make sure you're signed in with a counselor-permitted account and Firestore rules are published.</div></div>`;
+  }
+}
+
+function buildStudent(id, entries) {
+  const last = entries[entries.length - 1];
+  return {
+    id, entries,
+    name: last.studentName || id,
+    email: last.studentEmail || id,
+    flags: computeFlags(entries),
+    level: levelOf(impactSum(last.responses))
+  };
+}
+
+// ---- Demo data (synthetic, not real students) ----
+function demoResponses(target) {
+  const order = ["depressed", "restless", "sleeping_issues", "worry_scale", "concentration", "distracted",
+    "validation", "compare_to_others", "wo_purpose", "distracted_scale", "daily_activity_flux", "compare_feelings"];
+  const v = {}; ITEMS.forEach(k => v[k] = 1);
+  let sum = 12, i = 0;
+  while (sum < target && i < 200) { const k = order[i % order.length]; if (v[k] < 5) { v[k]++; sum++; } i++; }
+  const r = { age: "16", gender: "Other", rs: "Single", occupation: "School Student",
+    sm_type: ["Instagram", "TikTok", "YouTube"], avg_time_per_day: "3-4 hours" };
+  ITEMS.forEach(k => r[k] = LIKERT_LABELS[v[k] - 1]);
+  return r;
+}
+function startDemo() {
+  demoMode = true;
+  showMain();
+  document.getElementById("demo-banner").style.display = "block";
+  const mk = (name, id, targets) => buildStudent(id, targets.map((t, i) => ({
+    studentName: name, studentId: id, responses: demoResponses(t),
+    submittedAt: new Date(2026, 8, 7 * (i + 1)).toISOString()
+  })));
+  // Hand-built histories so the demo shows section trends and answer-level trends clearly.
+  const mkv = (name, id, vecs) => buildStudent(id, vecs[ITEMS[0]].map((_, i) => {
+    const r = demoResponses(12);
+    ITEMS.forEach(k => r[k] = LIKERT_LABELS[vecs[k][i] - 1]);
+    return { studentName: name, studentId: id, responses: r, submittedAt: new Date(2026, 8, 7 * (i + 1)).toISOString() };
+  }));
+  const A = { wo_purpose: [2,2,3,4,5], distracted: [2,3,3,3,4], restless: [2,2,3,4,4], distracted_scale: [3,3,3,3,4],
+    worry_scale: [3,3,3,3,3], concentration: [3,3,3,3,3], compare_to_others: [2,2,2,3,4], compare_feelings: [2,2,2,2,2],
+    validation: [4,4,4,3,2], depressed: [2,2,3,4,5], daily_activity_flux: [2,3,3,3,3], sleeping_issues: [2,3,3,4,5] };
+  const B = { wo_purpose: [5,4,4,3,2], distracted: [4,4,3,3,2], restless: [4,3,3,2,2], distracted_scale: [3,3,3,3,3],
+    worry_scale: [4,4,4,3,2], concentration: [3,3,3,3,2], compare_to_others: [3,3,3,2,2], compare_feelings: [3,3,2,2,2],
+    validation: [3,3,3,3,3], depressed: [4,4,3,2,1], daily_activity_flux: [3,3,3,3,3], sleeping_issues: [4,3,3,2,2] };
+  // Rows = check-ins; columns follow ITEMS (3 habits, 3 general, 3 comparison, 3 mood/sleep).
+  const mkr = (name, id, rows) => buildStudent(id, rows.map((row, i) => {
+    const r = demoResponses(12);
+    ITEMS.forEach((k, j) => r[k] = LIKERT_LABELS[row[j] - 1]);
+    return { studentName: name, studentId: id, responses: r, submittedAt: new Date(2026, 8, 7 * (i + 1)).toISOString() };
+  }));
+  const E = [[2,2,2, 3,2,3, 2,2,2, 2,2,2], [2,3,2, 3,3,3, 2,2,3, 2,3,2], [2,2,2, 3,2,3, 2,2,2, 2,2,3], [4,4,3, 4,4,4, 3,3,4, 4,3,4]];
+  const F = [[3,3,3, 3,3,3, 3,3,3, 2,2,2], [3,3,3, 3,3,3, 3,3,3, 2,3,2], [3,3,3, 3,3,3, 3,3,3, 2,2,2], [3,3,3, 3,3,3, 3,3,3, 5,3,3]];
+  const G = [[2,2,2, 2,2,3, 2,2,2, 2,2,2], [2,2,2, 3,2,3, 2,2,2, 2,2,2], [4,4,4, 4,3,4, 3,3,4, 3,3,3], [4,3,4, 4,3,4, 3,3,3, 3,3,3], [3,3,3, 3,3,3, 3,2,3, 2,3,3]];
+  const H = [[2,3,3, 3,3,3, 3,3,3, 5,3,4], [2,3,3, 3,3,3, 3,3,3, 4,3,3], [3,3,3, 3,3,3, 3,3,3, 4,3,3], [4,3,3, 3,3,3, 3,3,3, 3,3,2], [5,3,3, 3,3,3, 3,3,3, 2,3,2]];
+  const I = [[2,2,2, 2,2,3, 2,2,2, 2,2,2], [2,3,2, 3,3,3, 3,3,3, 2,2,3], [3,3,3, 3,3,3, 3,3,3, 3,3,3], [4,4,4, 4,3,3, 3,3,3, 5,4,5]];
+  const J = [[2,2,2, 2,2,2, 4,3,4, 2,2,2], [2,2,2, 2,3,2, 3,3,3, 2,2,2], [2,2,2, 3,3,2, 2,2,2, 2,2,2]];
+  renderStudentList([
+    mkv("Demo Student A", "demo.student1@example.com", A),
+    mkv("Demo Student B", "demo.student2@example.com", B),
+    mk("Demo Student C", "demo.student3@example.com", [34, 40]),
+    mk("Demo Student D", "demo.student4@example.com", [30, 35, 33, 38]),
+    mkr("Demo Student E", "demo.student5@example.com", E),
+    mkr("Demo Student F", "demo.student6@example.com", F),
+    mkr("Demo Student G", "demo.student7@example.com", G),
+    mkr("Demo Student H", "demo.student8@example.com", H),
+    mkr("Demo Student I", "demo.student9@example.com", I),
+    mkr("Demo Student J", "demo.student10@example.com", J)
+  ]);
+}
+
+// ---- Views ----
+function renderStudentList(students) {
+  const listView = document.getElementById("list-view");
+  const rows = students.map(s => `
+    <tr class="student-row" onclick="showDetail('${esc(s.id)}')">
+      <td>${esc(s.name)}</td>
+      <td>${esc(s.email)}</td>
+      <td>${s.entries.length}</td>
+      <td><span class="badge badge-level-${s.level}">${s.level}</span></td>
+      <td>${s.flags.length > 0
+        ? s.flags.map(flagHtml).join("")
+        : `<span class="badge badge-ok">No trend flags</span>`}</td>
+    </tr>`).join("");
+  listView.innerHTML = `
+    <div class="card">
+      <table>
+        <thead><tr><th>Student</th><th>Email</th><th>Check-ins</th><th>Latest level</th><th>Trend flags</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div class="note-box">
+      A trend flag means the overall score, or a whole section (its 3 answers added together), moved in one direction across the last three consecutive check-ins, not a single high or low score. Orange ↑ means it rose; green ↓ means it fell (improving). Under a flagged section, the individual answers that also moved are listed. A red "Sudden jump" flag means the overall score rose by 8 or more, or a section rose by 4 or more, between the last two check-ins.
+      "Latest level" is a screening summary of the most recent check-in (12 answers scored 1–5, total 12–60;
+      lower 32 or below, medium 33–43, higher 44+). It supports a counselor's judgment and is not a diagnosis.
+      Click a student to see the full trend.
+    </div>`;
+  window._students = students;
+}
+
+function showDetail(studentId) {
+  const student = window._students.find(s => s.id === studentId);
+  document.getElementById("list-view").style.display = "none";
+  const detailView = document.getElementById("detail-view");
+  detailView.style.display = "block";
+  const last = student.entries[student.entries.length - 1].responses || {};
+  detailView.innerHTML = `
+    <span class="back-link" onclick="backToList()">&larr; Back to all students</span>
+    <div class="card">
+      <h2 style="margin:0 0 2px; font-size:17px;">${esc(student.name)}</h2>
+      <p class="subtitle" style="margin:0;">${esc(student.email)} &middot; ${student.entries.length} check-ins</p>
+      <p style="margin:10px 0 0; font-size:14px;">Latest check-in: <strong>${impactSum(last)}</strong> of 60
+        <span class="badge badge-level-${student.level}" style="margin-left:6px;">${student.level}</span></p>
+      <div class="prob-row" id="model-row">Model estimate: ${API_URL ? "loading..." : "not connected (set API_URL to enable)"}</div>
+    </div>
+    <div class="chart-grid" id="chart-grid"></div>
+    <div class="note-box">
+      The model estimate is a second opinion from the Psyber Mentalytics classifier, trained on a university
+      survey (mostly adults), so treat it as a rough signal for teens. Student names and IDs are never sent to it,
+      only the 18 answers.
+    </div>`;
+  renderCharts(student.entries);
+  if (API_URL) fetchModelEstimate(last);
+}
+
+async function fetchModelEstimate(responses) {
+  const row = document.getElementById("model-row");
+  try {
+    const res = await fetch(API_URL.replace(/\/$/, "") + "/predict", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(responses)
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const d = await res.json();
+    const p = d.model_probabilities_no_sum || {};
+    row.innerHTML = `<span>Model estimate: <strong>${esc(d.model_risk_no_sum)}</strong></span>` +
+      Object.keys(p).map(k => `<span>${esc(k)} ${(p[k] * 100).toFixed(0)}%</span>`).join("");
+  } catch (err) {
+    row.textContent = "Model estimate unavailable (" + err.message + ").";
+  }
+}
+
+function backToList() {
+  document.getElementById("detail-view").style.display = "none";
+  document.getElementById("list-view").style.display = "block";
+}
+
+function lineChart(grid, title, labels, series, yMin, yMax, step, opts = {}) {
+  const box = document.createElement("div");
+  box.className = "chart-box" + (opts.wide ? " wide" : "");
+  box.innerHTML = `<h3>${esc(title)}</h3><div class="chart-wrap"><canvas></canvas></div>` +
+    (opts.noteHtml ? `<div class="chart-note">${opts.noteHtml}</div>` : "");
+  grid.appendChild(box);
+  new Chart(box.querySelector("canvas").getContext("2d"), {
+    type: "line",
+    data: { labels, datasets: series },
+    options: {
+      responsive: true,
+      maintainAspectRatio: !opts.wide,
+      plugins: { legend: { display: false } },
+      scales: { y: { min: yMin, max: yMax, ticks: { stepSize: step } } }
+    }
+  });
+}
+
+function trendWord(d) { return d === "up" ? `rising <span class="up">↑</span>` : d === "down" ? `falling <span class="down">↓</span> (improving)` : "no consistent trend"; }
+
+function renderCharts(entries) {
+  const grid = document.getElementById("chart-grid");
+  if (typeof Chart === "undefined") {
+    grid.innerHTML = `<div class="card" style="grid-column: 1 / -1;"><div class="empty-state">Charts couldn't load — please refresh the page.</div></div>`;
+    return;
+  }
+  const labels = entries.map((e, i) => "Check-in " + (i + 1));
+  const main = { borderColor: "#492F92", backgroundColor: "rgba(73,47,146,0.1)", tension: 0.3, fill: true, pointRadius: 3 };
+  const guide = c => ({ borderColor: c, borderDash: [5, 4], borderWidth: 1, pointRadius: 0, fill: false });
+  const t = computeTrends(entries);
+  const jumps = computeJumps(entries);
+  const n = entries.length;
+  const needMore = "Trends need 3 or more check-ins.";
+  // Points where a sudden jump landed are drawn larger and red.
+  const jumpPoints = pick => ({
+    pointBackgroundColor: entries.map((e, i) => jumps.some(j => j.at === i + 1 && pick(j)) ? "#A32D2D" : "#492F92"),
+    pointBorderColor: entries.map((e, i) => jumps.some(j => j.at === i + 1 && pick(j)) ? "#A32D2D" : "#492F92"),
+    pointRadius: entries.map((e, i) => jumps.some(j => j.at === i + 1 && pick(j)) ? 6 : 3)
+  });
+  try {
+    lineChart(grid, "Overall score (12–60)", labels, [
+      { ...main, ...jumpPoints(j => j.overall), data: entries.map(e => impactSum(e.responses)) },
+      { ...guide("#BA7517"), data: entries.map(() => MED_CUT) },
+      { ...guide("#A32D2D"), data: entries.map(() => HIGH_CUT) }
+    ], 12, 60, 12, {
+      wide: true,
+      noteHtml: (t.enough ? `<strong>Trend:</strong> ${trendWord(t.overall)} over the last three check-ins. Dashed lines mark the medium (33) and higher (44) cut-offs.` : needMore)
+        + jumpNote(jumps, j => j.overall, n)
+    });
+  } catch (err) { console.error("Overall chart failed", err); }
+  t.sections.forEach(x => {
+    try {
+      let note;
+      if (!t.enough) note = needMore;
+      else {
+        note = `<strong>Section trend:</strong> ${trendWord(x.dir)}.<br>` + (x.items.length
+          ? `<strong>Within this section:</strong> ` + x.items.map(i => `${esc(i.label)} <span class="${i.dir}">${arrow(i.dir)}</span>`).join(" · ")
+          : `No individual answer moved three check-ins in a row.`);
+      }
+      note += jumpNote(jumps, j => (j.sections.find(z => z.name === x.sec.name) || {}).delta, n);
+      lineChart(grid, x.sec.name + " (3–15)", labels,
+        [{ ...main, ...jumpPoints(j => j.sections.some(z => z.name === x.sec.name)), data: entries.map(e => sectionScore(e.responses, x.sec)) }], 3, 15, 3, { noteHtml: note });
+    } catch (err) { console.error("Chart failed for " + x.sec.name, err); }
+  });
+}
+</script>
+
+<!--
+Setup notes:
+1. Use the same firebaseConfig as the student check-in app (same project).
+2. Restrict Google sign-in to your school's domain by setting the "hd" parameter
+   above to your actual school Google Workspace domain.
+3. Being signed in with Google does NOT grant read access by itself — the
+   Firestore rules require request.auth.token.counselor == true. That custom
+   claim has to be set by a trusted admin process (e.g. a small Cloud Function
+   run by school IT), not by this app. Until that's set up, sign-in will
+   succeed but the student list will fail to load — that's the security
+   working as intended, not a bug.
+4. See firestore.rules (from the check-in app) for the matching security rules.
+5. API_URL is optional. Everything except the "Model estimate" line works without it.
+-->
+</body>
+</html>

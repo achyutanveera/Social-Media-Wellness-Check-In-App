@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function likert(v) {
+      return v in ['Never', 'Rarely', 'Sometimes', 'Often', 'Very Often'];
+    }
+
+    // Shape and size limits for one check-in. The web page checks the same things,
+    // but only these rules stop someone writing to the database directly.
+    function validEntry(studentId) {
+      let d = request.resource.data;
+      let r = d.responses;
+      return d.keys().hasOnly(['studentName', 'studentId', 'studentEmail', 'responses', 'submittedAt'])
+        && d.keys().hasAll(['studentName', 'studentId', 'studentEmail', 'responses', 'submittedAt'])
+        && d.studentName is string && d.studentName.size() >= 3 && d.studentName.size() <= 80
+        && d.studentName.matches('[^ ]+( [^ ]+)+')
+        && !d.studentName.matches('.*[0-9<>@/_=+*%$#!?|~^&].*')
+        && d.studentId is string && d.studentId == studentId && d.studentId.size() <= 64
+        && d.studentEmail is string && d.studentEmail.size() <= 120
+        && d.studentEmail.matches('[a-z0-9._%+-]{1,64}@([a-z0-9-]+[.])+[a-z]{2,24}')
+        && d.submittedAt == request.time
+        && r is map
+        && r.keys().hasOnly(['age', 'gender', 'rs', 'occupation', 'sm_type', 'avg_time_per_day', 'wo_purpose', 'distracted', 'restless', 'distracted_scale', 'worry_scale', 'concentration', 'compare_to_others', 'compare_feelings', 'validation', 'depressed', 'daily_activity_flux', 'sleeping_issues'])
+        && r.keys().hasAll(['age', 'gender', 'rs', 'occupation', 'sm_type', 'avg_time_per_day', 'wo_purpose', 'distracted', 'restless', 'distracted_scale', 'worry_scale', 'concentration', 'compare_to_others', 'compare_feelings', 'validation', 'depressed', 'daily_activity_flux', 'sleeping_issues'])
+        && r.age is string && r.age.matches('1[3-9]|[2-9][0-9]|1[0-2][0-9]')
+        && r.gender in ['Female', 'Male', 'Other']
+        && r.rs in ['Single', 'In a relationship', 'Married', 'Divorced']
+        && r.occupation in ['School Student', 'University Student', 'Salaried Worker', 'Retired']
+        && r.avg_time_per_day in ['Less than 1 hour', '1-2 hours', '2-3 hours', '3-4 hours', '4-5 hours', 'More than 5 hours']
+        && r.sm_type is list && r.sm_type.size() >= 1 && r.sm_type.size() <= 10
+        && r.sm_type.hasOnly(['Facebook', 'Instagram', 'TikTok', 'Snapchat', 'YouTube', 'Twitter/X', 'Pinterest', 'Discord', 'Reddit', 'Other'])
+        && likert(r.wo_purpose)
+        && likert(r.distracted)
+        && likert(r.restless)
+        && likert(r.distracted_scale)
+        && likert(r.worry_scale)
+        && likert(r.concentration)
+        && likert(r.compare_to_others)
+        && likert(r.compare_feelings)
+        && likert(r.validation)
+        && likert(r.depressed)
+        && likert(r.daily_activity_flux)
+        && likert(r.sleeping_issues);
+    }
+
+    // OPEN RULES (demo): any signed-in visitor can submit, but only a well-formed check-in
+    // from someone aged 13 or older, under a hashed-email key, is accepted.
+    match /checkins/{studentId}/entries/{entryId} {
+      allow create: if request.auth != null
+        && studentId.matches('[0-9a-f]{64}')
+        && validEntry(studentId);
+
+      allow update, delete: if false;
+
+      allow read: if request.auth != null && request.auth.token.counselor == true;
+    }
+
+    // Lets the counselor dashboard read all students' entries with one query.
+    match /{path=**}/entries/{entryId} {
+      allow read: if request.auth != null && request.auth.token.counselor == true;
+    }
+  }
+}

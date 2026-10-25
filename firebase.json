@@ -1,0 +1,14 @@
+{
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "site": "mind-the-gap-checkpoint"
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  }
+}
